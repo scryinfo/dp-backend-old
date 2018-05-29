@@ -9,6 +9,7 @@ headers = {"Authorization": "JWT "+jwtToken}
 path='http://localhost:2222/'
 payload={'username':'22','password':'22'}
 
+path='https://dev.scry.info:443/meta/'
 
 r = requests.post('http://localhost:5000', json = payload, headers=headers)
 #r = requests.get(path, json = payload, headers=headers)
