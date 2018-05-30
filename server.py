@@ -1,8 +1,12 @@
 #JWT TOKEN eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJuYW1lIjoiMjIiLCJhY2NvdW50IjoiMHg0MDc4NDA3YzlhNGIxNzNmNjc5ZTQ3MGY1YjE2N2FmMmQ3MTU2NDFiIiwiaWF0IjoxNTI3NTAwNDkzLCJleHAiOjE1Mjc3MTY0OTN9._-HKiuAc_LUJOHrY5hUAOPMaBY2dxAAQAVr7Q0RblOU
-from model import db, Categories
-from peewee import IntegrityError,OperationalError
+from model import db, Categories, Trader
+from peewee import IntegrityError,OperationalError,InternalError
 from flask import Flask,request
-from werkzeug.security import safe_str_cmp
+from flask_cors import CORS
+from flask_jwt import JWT, jwt_required, current_identity
+from categories import create_category,testMetaData
+
+#from werkzeug.security import safe_str_cmp
 import json
 
 
@@ -16,51 +20,57 @@ masterMetaData={
             }
 
 
-# This function is part of testMetaData (see below)
-def verifyStructure(key_,val,master=masterMetaData):
-    try:
-        masterValues=master[key_]
-        if type(masterValues)==list:
-            for i in masterValues:
-                if i==val:
-                    return("Success")
-            return('No Match')
-    except KeyError:
-        return("Key Error")
 
-# This function is used to verify Metadata structure (input from categories)
-def testMetaData(ds,master=masterMetaData):
-    testResult=[]
-    res=''
-    for d in ds:
-        print(d)
-        colname=list(d.keys())[0]
-        val=next(iter(d.values()))
-        for key in val:
-            res=verifyStructure(key,val[key],master)
-            if res!='Success':
-                testResult+=[[colname,key,val[key],res]]
-    if len(testResult)==0:
-        testResult=['Passed']
-    return testResult
-
-def create_category(db,catname,meta):
+'''def create_category(db,catname,meta):
     try:
-        db.close()
         db.connect()
         cat = Categories.create(name=json.dumps(catname), metadata=meta)
         cat.save()
         db.close()
         result='success'
-    except IntegrityError:
-        result='already exists'
-    except OperationalError:
-        result='operational error'
-    return result
+#    except IntegrityError:
+#        result='already exists'
+#    except OperationalError:
+#        result='operational error'
+    except:
+        result='internal error'
+    return result'''
+
+def authenticate(username, password):
+    try:
+        user = Trader.select().where(Trader.name == username).get()
+    except:
+        user = None
+
+    return user
+
+def identity(payload):
+    try:
+        user_id = payload['identity']
+    except:
+        user_id = payload['user_id']
+    user = Trader.select().where(Trader.id == user_id).get()
+    return user_id
+
 
 app = Flask(__name__)
 app.debug = True
-app.config['SECRET_KEY'] = 'SECRET'
+app.config['SECRET_KEY'] = 'secret'
+app.config['JWT_VERIFY_CLAIMS']=['signature', 'exp',  'iat']
+app.config['JWT_REQUIRED_CLAIMS']=['exp',  'iat']
+
+jwt = JWT(app, authenticate, identity)
+CORS(app, supports_credentials=True)
+
+@app.errorhandler(500)
+def server_internal_Error(e):
+    return 'interal error', 500
+
+
+@app.route('/protected')
+@jwt_required()
+def protected():
+    return '%s' % current_identity
 
 
 @app.route('/test_post',methods=['POST'])
@@ -103,7 +113,8 @@ def  categories():
             return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
 
         #TEST 5 : Create Data
-
+#        print ("AAAAAAAAAAAAAAAAAAAa")
+#        rs='aa'
         rs=create_category(db, catname,meta)
         if rs=='already exists':
             return json.dumps({'Result':'Category Name already exists'})
