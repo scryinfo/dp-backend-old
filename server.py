@@ -20,22 +20,6 @@ masterMetaData={
             }
 
 
-
-'''def create_category(db,catname,meta):
-    try:
-        db.connect()
-        cat = Categories.create(name=json.dumps(catname), metadata=meta)
-        cat.save()
-        db.close()
-        result='success'
-#    except IntegrityError:
-#        result='already exists'
-#    except OperationalError:
-#        result='operational error'
-    except:
-        result='internal error'
-    return result'''
-
 def authenticate(username, password):
     try:
         user = Trader.select().where(Trader.name == username).get()
@@ -54,13 +38,14 @@ def identity(payload):
 
 
 app = Flask(__name__)
+CORS(app)
+
 app.debug = True
 app.config['SECRET_KEY'] = 'secret'
 app.config['JWT_VERIFY_CLAIMS']=['signature', 'exp',  'iat']
 app.config['JWT_REQUIRED_CLAIMS']=['exp',  'iat']
 
-jwt = JWT(app, authenticate, identity)
-CORS(app, supports_credentials=True)
+#jwt = JWT(app, authenticate, identity)
 
 @app.errorhandler(500)
 def server_internal_Error(e):
@@ -86,6 +71,9 @@ def test_post():
 
     return result
 
+@app.route("/hello")
+def helloWorld():
+  return "Hello, cross-origin-world!"
 
 @app.route('/categories',methods=['POST'])
 def  categories():
@@ -122,7 +110,6 @@ def  categories():
             return json.dumps({'Result':'Category Created'})
     else:
         return json.dumps({'Result':'Not Json'})
-
 
 
 if __name__ == '__main__':
