@@ -35,7 +35,7 @@ app.config['SECRET_KEY'] = 'secret'
 app.config['JWT_VERIFY_CLAIMS']=['signature', 'exp',  'iat']
 app.config['JWT_REQUIRED_CLAIMS']=['exp',  'iat']
 
-#jwt = JWT(app, authenticate, identity)
+jwt = JWT(app, authenticate, identity)
 
 @app.errorhandler(500)
 def server_internal_Error(e):
