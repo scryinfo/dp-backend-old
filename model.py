@@ -55,7 +55,7 @@ def test_create_categories():
         try:
             db.connect()
 
-            cat = Categories.create(name=catname, metadata=meta)
+            cat = Categories.create(name=catname, metadeata=meta)
             cat.save()
             db.close()
             result='success'
@@ -64,21 +64,3 @@ def test_create_categories():
         except OperationalError:
             result='operational error'
         return result
-    airlineMetaRight={
-    "CategoryName": ["Aviation","Commercial Flights","Airport Info"],
-    "DataStructure":
-            [
-            {"AirlineId": {"DataType":"Int", "IsUnique":"True","IsPrimaryKey":"True"}},
-            {"AirlineName": {"DataType":"String", "IsUnique":"True"}},
-            {"ANA": {"DataType":"String", "IsUnique":"True"}},
-            {"IATA": {"DataType":"String", "IsUnique":"True", "IsNull":"True"}},
-            {"IACAO": {"DataType":"String", "IsUnique":"True", "IsNull":"True"}},
-            {"Callsign":{"DataType":"String", "IsUnique":"True"}},
-            {"Country": {"DataType":"String"}},
-            {"Active": {"DataType":"String"}}
-            ],
-        "Keywords":"Airline,Commercial Airline"
-
-    }
-
-#test_create_categories()

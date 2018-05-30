@@ -4,11 +4,12 @@ from peewee import IntegrityError,OperationalError,InternalError
 
 masterMetaData={
                  "DataType":["String","Int","Float","Date","Datetime"],
-                 "IsNull" : ["True","False"],
-                 "IsUnique":["True","False"],
+                 "IsNull" : ["true","false"],
+                 "IsUnique":["true","false"],
                  "ForeignDataHash":"String",
-                 "IsPrimaryKey":["True","False"]
+                 "IsPrimaryKey":["true","false"]
             }
+
 
 
 def create_category(db,catname,meta):

@@ -10,16 +10,6 @@ from categories import create_category,testMetaData
 import json
 
 
-
-masterMetaData={
-                 "DataType":["String","Int","Float","Date","Datetime"],
-                 "IsNull" : ["True","False"],
-                 "IsUnique":["True","False"],
-                 "ForeignDataHash":"String",
-                 "IsPrimaryKey":["True","False"]
-            }
-
-
 def authenticate(username, password):
     try:
         user = Trader.select().where(Trader.name == username).get()
@@ -52,36 +42,14 @@ def server_internal_Error(e):
     return 'interal error', 500
 
 
-@app.route('/protected')
-@jwt_required()
-def protected():
-    return '%s' % current_identity
-
-
-@app.route('/test_post',methods=['POST'])
-def test_post():
-    if request.is_json:
-        data=request.get_json()
-        print(data['username'])
-        print(data)
-        print(type(data))
-        result =str(data)
-    else:
-        result ='Not Json'
-
-    return result
-
-@app.route("/hello")
-def helloWorld():
-  return "Hello, cross-origin-world!"
-
 @app.route('/categories',methods=['POST'])
+@jwt_required()
 def  categories():
 
     # TEST 1 : Is it a JSON
     if request.is_json:
         data=request.get_json()
-
+        print(data)
         # TEST 2 : Category Name True
         try:
             catname=data['CategoryName']
@@ -101,15 +69,23 @@ def  categories():
             return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
 
         #TEST 5 : Create Data
-#        print ("AAAAAAAAAAAAAAAAAAAa")
-#        rs='aa'
-        rs=create_category(db, catname,meta)
+        rs=create_category(db, catname,json.dumps(data))
         if rs=='already exists':
             return json.dumps({'Result':'Category Name already exists'})
         else:
             return json.dumps({'Result':'Category Created'})
     else:
         return json.dumps({'Result':'Not Json'})
+
+
+
+@app.route('/getcategories',methods=['POST'])
+def  getcategories():
+    cat_list=[]
+    for cat in Categories.select():
+        cat_list.append(cat.metadata)
+
+    return str(cat_list)
 
 
 if __name__ == '__main__':
