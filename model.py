@@ -3,10 +3,13 @@ from peewee import *
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from playhouse.postgres_ext import PostgresqlExtDatabase, BinaryJSONField
+from settings import *
+
 
 #db = SqliteDatabase('scry.db')
 
-db =  PostgresqlExtDatabase('scry', user='postgres', host='127.0.0.1', port=5432)
+#db = connect(os.environ.get('DB_CONNECTION_STRING')
+db =  PostgresqlExtDatabase('scry', user=DB_USER,port=5432)
 
 
 
