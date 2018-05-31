@@ -43,12 +43,14 @@ def server_internal_Error(e):
 
 
 @app.route('/categories',methods=['POST'])
-@jwt_required()
+#@jwt_required()
 def  categories():
 
     # TEST 1 : Is it a JSON
     if request.is_json:
         data=request.get_json()
+        json_data=data
+
         print(data)
         # TEST 2 : Category Name True
         try:
@@ -69,24 +71,34 @@ def  categories():
             return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
 
         #TEST 5 : Create Data
-        rs=create_category(db, catname,json.dumps(data))
+        rs=create_category(db, catname,data)
+#        rs=create_category(db, catname,json_data)
         if rs=='already exists':
             return json.dumps({'Result':'Category Name already exists'})
-        else:
+        elif rs=='success':
             return json.dumps({'Result':'Category Created'})
+        else:
+            return json.dumps({'Result':'Category Not Created'})
     else:
         return json.dumps({'Result':'Not Json'})
 
 
 
 @app.route('/getcategories',methods=['POST'])
+@jwt_required()
 def  getcategories():
     cat_list=[]
     for cat in Categories.select():
         cat_list.append(cat.metadata)
+    db.close()
 
     return str(cat_list)
 
+
+@app.route('/protected')
+@jwt_required()
+def protected():
+    return '%s' % current_identity
 
 if __name__ == '__main__':
     app.run(port=2222)

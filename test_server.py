@@ -2,12 +2,6 @@ import requests
 import json
 from categories import create_category
 
-publisher_path='http://localhost:2222/'
-scry_path='http://localhost:1234/'
-payload={'username':'22','password':'22'}
-#scry_path='https://dev.scry.info:443/scry2/'
-#publisher_path='https://dev.scry.info:443/meta/'
-
 
 def test_post(path):
     payload={'username':'1','password':'1','account':'1'}
@@ -95,9 +89,11 @@ def test_categories_dirty(path):
     return result
 
 
-def test_categories(path):
+def test_categories(path,jwt_server_path,upayload):
+    jwtToken=test_jwt_scry(jwt_server_path,upayload)
+    headers = {"Authorization": "JWT "+jwtToken}
     payload={
-    "CategoryName": ["Aviation","Commercial Flights","Airport Info"],
+    "CategoryName": ["Aviation3","Commercial Flights","Airport Info"],
     "DataStructure":
             [
             {"AirlineId": {"DataType":"Int", "IsUnique":"true","IsPrimaryKey":"true"}},
@@ -111,8 +107,7 @@ def test_categories(path):
             ]
     }
 
-    r = requests.post(path+'categories', json = payload)
-
+    r = requests.post(path+'categories', json = payload,headers=headers)
     result=r.text
     print(result)
     return result
@@ -155,18 +150,38 @@ def test_json(path):
 
 
 
+def test_getcategories(path,jwt_server_path,payload):
+    jwtToken=test_jwt_scry(jwt_server_path,payload)
+    headers = {"Authorization": "JWT "+jwtToken}
+
+    r = requests.post(path+'getcategories', headers=headers)
+
+    result=r.text
+    print(result)
+    return result
+
+publisher_path='http://localhost:2222/'
+scry_path='http://localhost:1234/'
+userpayload={'username':'22','password':'22'}
+#scry_path='https://dev.scry.info:443/scry2/'
+#publisher_path='https://dev.scry.info:443/meta/'
 
 
 
 
 #print(test_no_json(publisher_path)=='Not Json')
-#print(test_no_categories(publisher_path)=='{"Result": "No Category"}')
-#print(test_no_datastructure(publisher_path)=='{"Result": "No Data Structure"}')
-#print(test_categories_dirty(publisher_path)=='{"Result": "Metadata Error", "DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"], ["AirlineName", "DataType", "Strings", "No Match"]]}')
-#print(test_categories(publisher_path)=='{"Result": "Category Created"}')
-#print(test_categories(publisher_path)=='{"Result": "Category Name already exists"}')
-#print(test_jwt_scry(scry_path,payload))
-#print(test_auth_right_JWT(publisher_path,scry_path,payload))
+print(test_no_categories(publisher_path)=='{"Result": "No Category"}')
+print(test_no_datastructure(publisher_path)=='{"Result": "No Data Structure"}')
+print(test_categories_dirty(publisher_path)=='{"Result": "Metadata Error", "DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"], ["AirlineName", "DataType", "Strings", "No Match"]]}')
 
-r = requests.post(publisher_path+'getcategories')
-print(r.text)
+
+print(test_jwt_scry(scry_path,userpayload))
+print(test_getcategories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
+
+print(test_categories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
+#
+#print(test_auth_right_JWT(publisher_path,scry_path,userpayload))
+
+
+print(test_getcategories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
+print(test_categories(publisher_path,scry_path,userpayload)=='{"Result": "Category Name already exists"}')

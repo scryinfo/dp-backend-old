@@ -6,9 +6,8 @@ from playhouse.postgres_ext import PostgresqlExtDatabase, BinaryJSONField
 
 #db = SqliteDatabase('scry.db')
 
-db =  PostgresqlExtDatabase('scry', user='postgres', host='127.0.0.1', port=5432,autorollback=True)
+db =  PostgresqlExtDatabase('scry', user='postgres', host='127.0.0.1', port=5432)
 
-db = PostgresqlDatabase('scry')
 
 
 class Categories(Model):
