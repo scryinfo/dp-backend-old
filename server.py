@@ -5,6 +5,8 @@ from flask import Flask,request
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
 from categories import create_category,testMetaData
+from publisher import publish_data
+
 
 #from werkzeug.security import safe_str_cmp
 import json
@@ -84,6 +86,31 @@ def  categories():
 
 
 
+@app.route('/publisher',methods=['POST'])
+@jwt_required()
+def  publisher():
+    json_data=request.get_json()
+
+    print(json_data)
+    catname=json.dumps(json_data['category_name'])
+    file_cid=json_data['IPFS_hash']
+    price=json_data['price']
+    filename=json_data['filename']
+    keywords=json_data['keywords']
+    trader_id=current_identity
+
+
+    print(catname)
+    print(file_cid)
+    print(price)
+    print(filename)
+    print(keywords)
+    print(trader_id)
+
+    print(publish_data (catname, file_cid,trader_id,price,filename,keywords))
+
+    return str("current_identity : "+str(current_identity))
+
 @app.route('/getcategories',methods=['POST'])
 @jwt_required()
 def  getcategories():
@@ -95,9 +122,12 @@ def  getcategories():
     return str(cat_list)
 
 
+
 @app.route('/protected')
 @jwt_required()
 def protected():
+
+
     return '%s' % current_identity
 
 if __name__ == '__main__':

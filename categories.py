@@ -1,4 +1,4 @@
-from model import db,Categories
+from model import db, Categories
 import json
 from peewee import IntegrityError,OperationalError,InternalError
 
