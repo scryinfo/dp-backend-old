@@ -194,7 +194,8 @@ def test_publisher(publisher_path,jwt_server_path,userpayload):
 
     payload={
     "category_name":["Aviation","Commercial Flights","Airport Info"]
-    , "IPFS_hash":"QmRG9U8akdxckFjm5MYRy9mxcaoMytrD2pE6stwKhzNTSf"
+    , "IPFS_hash":"QmRG9U8akdxckFjm5MYRy9mxcaoMytrD2pE6stwKhzNTSf" #airlines 1 line
+#    , "IPFS_hash":"Qmao4wg8KPxqjpcNsN55dJXxJ3kuBwMQSZ26SFemqMBUm7" #airlines all
     ,"price":1000
     ,"filename":"file5"
     ,"keywords":"Aviation,Commercial,Airline"

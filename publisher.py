@@ -6,7 +6,7 @@ from model import db,Listing, Trader, Categories
 from settings import *
 import json
 from peewee import IntegrityError
-
+import ipfsapi
 
 testdata_path=TEST_DATA_PATH
 #Test Hash : --> Hello World
@@ -208,7 +208,7 @@ def record_listing(db,file_cid,trader_id,size,filename,price,catname,keywords):
         return 'Category doesnt exist'
 
     try:
-        listing = Listing(cid=file_cid, size=10,ownerId=trader_id, name=filename, price=price,keywords=keywords,isstructured=1,categoryId=cat_id)#,
+        listing = Listing(cid=file_cid, size=size,ownerId=trader_id, name=filename, price=price,keywords=keywords,isstructured=1,categoryId=cat_id)#,
         listing.save()
         db.close()
         return 'Success'
@@ -245,9 +245,18 @@ def publish_data (catname, file_cid,trader_id,price,filename,keywords, master=ma
     #2- get data from ipfs and save it to a local folder
     file_path=getIpfsData(file_cid,test_folder) #file_cid = ipfs hash
 
+
     if file_path=='Wrong Hash':
         return ('IPFS hash erroneous')
     else:
+        api = ipfsapi.connect('127.0.0.1', 5001)
+        res = api.add(file_path)
+        print(res)
+        #QmZ4tDuvesekSs4qM5ZBKpXiZGun7S2CYtEZRB3DYXkjGx helloworlds
+        size=res['Size']
+        file_cid=res['Hash']
+
+        print(file_cid)
         df=load_data(file_path,json.loads(meta))
         print('Test 3 : successfully loaded file from IPFS')
 
@@ -259,7 +268,7 @@ def publish_data (catname, file_cid,trader_id,price,filename,keywords, master=ma
         return ['Test Failed',test_result]
 
     #4 If no error, publish listing
-    size=10
+
     publish_result=record_listing(db,file_cid,trader_id,size,filename,price,catname,keywords)
     return publish_result
 
@@ -272,6 +281,8 @@ def publish_data (catname, file_cid,trader_id,price,filename,keywords, master=ma
 #file without errors
 #file_cid='QmRG9U8akdxckFjm5MYRy9mxcaoMytrD2pE6stwKhzNTSf'
 
+
+#ipfs pin add -r QmRG9U8akdxckFjm5MYRy9mxcaoMytrD2pE6stwKhzNTSf
 #catname='["Aviation", "Commercial Flights", "Airport Info"]'
 
 #print(publisher(catname,file_cid,'22','1','file1','Aviation,Commercial'))

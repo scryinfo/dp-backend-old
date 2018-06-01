@@ -107,9 +107,9 @@ def  publisher():
     print(keywords)
     print(trader_id)
 
-    print(publish_data (catname, file_cid,trader_id,price,filename,keywords))
+    result=publish_data (catname, file_cid,trader_id,price,filename,keywords)
 
-    return str("current_identity : "+str(current_identity))
+    return result
 
 @app.route('/getcategories',methods=['POST'])
 @jwt_required()
