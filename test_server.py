@@ -93,7 +93,7 @@ def test_categories(path,jwt_server_path,upayload):
     jwtToken=test_jwt_scry(jwt_server_path,upayload)
     headers = {"Authorization": "JWT "+jwtToken}
     payload={
-    "CategoryName": ["Aviation", "Commercial Flights", "Airport Info"],
+    "CategoryName": ["Aviation6", "Commercial Flights", "Airport Info"],
     "DataStructure":
             [
             {"AirlineId": {"DataType":"Int", "IsUnique":"true","IsPrimaryKey":"true"}},
@@ -111,6 +111,8 @@ def test_categories(path,jwt_server_path,upayload):
     result=r.text
     print(result)
     return result
+
+
 
 
 def test_jwt_scry(jwt_server_path,payload):
@@ -166,9 +168,6 @@ userpayload={'username':'22','password':'22'}
 #scry_path='https://dev.scry.info:443/scry2/'
 #publisher_path='https://dev.scry.info:443/meta/'
 
-
-
-
 #print(test_no_json(publisher_path)=='Not Json')
 #print(test_no_categories(publisher_path)=='{"Result": "No Category"}')
 #print(test_no_datastructure(publisher_path)=='{"Result": "No Data Structure"}')
@@ -206,5 +205,29 @@ def test_publisher(publisher_path,jwt_server_path,userpayload):
     result=r.text
     print(result)
     return result
+
+
+def test_categories2(path,jwt_server_path,upayload):
+    jwtToken=test_jwt_scry(jwt_server_path,upayload)
+    headers = {"Authorization": "JWT "+jwtToken}
+    payload={
+    "CategoryName": ["Aviation9", "Commercial Flights", "Airport Info"],
+    "DataStructure":
+            [
+            {"AirlineId": {"DataType":"Int", "IsUnique":"true","IsPrimaryKey":"true"}}
+            ]
+    }
+
+    r = requests.post(path+'categories', json = payload,headers=headers)
+    result=r.text
+    print(result)
+    return result
+
+
+
+
+#print(test_categories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
+#print(test_getcategories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
+
 
 print(test_publisher(publisher_path,scry_path,userpayload))

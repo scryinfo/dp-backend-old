@@ -1,12 +1,12 @@
 #JWT TOKEN eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJuYW1lIjoiMjIiLCJhY2NvdW50IjoiMHg0MDc4NDA3YzlhNGIxNzNmNjc5ZTQ3MGY1YjE2N2FmMmQ3MTU2NDFiIiwiaWF0IjoxNTI3NTAwNDkzLCJleHAiOjE1Mjc3MTY0OTN9._-HKiuAc_LUJOHrY5hUAOPMaBY2dxAAQAVr7Q0RblOU
-from model import db, Categories, Trader
-from peewee import IntegrityError,OperationalError,InternalError
 from flask import Flask,request, jsonify
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
-from categories import create_category,testMetaData
+from categories import create_category,validate_category
 from publisher import publish_data
-
+from model import db, Categories, Trader
+from peewee import IntegrityError,OperationalError,InternalError
+import simplejson
 
 #from werkzeug.security import safe_str_cmp
 import json
@@ -44,10 +44,13 @@ def server_internal_Error(e):
     return 'interal error', 500
 
 
+# FROM Categories.py : uses validate_category and create_category
 @app.route('/categories',methods=['POST'])
-#@jwt_required()
+@jwt_required()
 def  categories():
-
+    print("*******  PRINT JSON *************")
+    print(request.json)
+    print()
     # TEST 1 : Is it a JSON
     if request.is_json:
         data=request.get_json()
@@ -68,8 +71,8 @@ def  categories():
             return json.dumps({'Result':'No Data Structure'})
 
         #TEST 4 : Test Metadata
-        test_data=testMetaData(meta)
-        if testMetaData(data['DataStructure'])!=['Passed']:
+        test_data=validate_category(meta)
+        if validate_category(data['DataStructure'])!=['Passed']:
             return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
 
         #TEST 5 : Create Data
@@ -84,14 +87,37 @@ def  categories():
     else:
         return json.dumps({'Result':'Not Json'})
 
+@app.route('/validate_category',methods=['POST'])
+@jwt_required()
+def validate_metadata():
+    data=request.get_json()
+
+    # TEST 3 : DataStructure True
+    try:
+        meta=data['DataStructure']
+    except:
+        return json.dumps({'Result':'No Data Structure'})
+
+
+    test_data=validate_category(meta)
+    if validate_category(data['DataStructure'])!=['Passed']:
+        return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
+    else:
+         return "Data matches metadata defitinion"
+
 
 
 @app.route('/publisher',methods=['POST'])
 @jwt_required()
 def  publisher():
-    json_data=request.get_json()
 
+    json_data=request.get_json()
+    print('REQUEST JSON ')
     print(json_data)
+    print()
+
+
+#    print(json_data)
     catname=json.dumps(json_data['category_name'])
     file_cid=json_data['IPFS_hash']
     price=json_data['price']
@@ -99,17 +125,9 @@ def  publisher():
     keywords=json_data['keywords']
     trader_id=current_identity
 
-
-    print(catname)
-    print(file_cid)
-    print(price)
-    print(filename)
-    print(keywords)
-    print(trader_id)
-
     result=publish_data (catname, file_cid,trader_id,price,filename,keywords)
 
-    return result
+    return str(simplejson.dumps(result, ignore_nan=True)) # Simple json is used to handle Nan values in test result numpy array TestIsNull
 
 @app.route('/getcategories',methods=['POST'])
 @jwt_required()
@@ -120,8 +138,6 @@ def  getcategories():
     db.close()
 
     return jsonify(cat_list)
-
-
 
 @app.route('/protected')
 @jwt_required()
