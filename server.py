@@ -1,7 +1,7 @@
 #JWT TOKEN eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJuYW1lIjoiMjIiLCJhY2NvdW50IjoiMHg0MDc4NDA3YzlhNGIxNzNmNjc5ZTQ3MGY1YjE2N2FmMmQ3MTU2NDFiIiwiaWF0IjoxNTI3NTAwNDkzLCJleHAiOjE1Mjc3MTY0OTN9._-HKiuAc_LUJOHrY5hUAOPMaBY2dxAAQAVr7Q0RblOU
 from model import db, Categories, Trader
 from peewee import IntegrityError,OperationalError,InternalError
-from flask import Flask,request
+from flask import Flask,request, jsonify
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
 from categories import create_category,testMetaData
@@ -119,7 +119,7 @@ def  getcategories():
         cat_list.append(cat.metadata)
     db.close()
 
-    return str(cat_list)
+    return jsonify(cat_list)
 
 
 

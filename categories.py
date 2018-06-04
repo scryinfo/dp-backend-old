@@ -1,6 +1,7 @@
 from model import db, Categories
 import json
 from peewee import IntegrityError,OperationalError,InternalError
+from flask import jsonify
 
 masterMetaData={
                  "DataType":["String","Int","Float","Date","Datetime"],
@@ -10,12 +11,28 @@ masterMetaData={
                  "IsPrimaryKey":["true","false"]
             }
 
+
+
+
 def create_category(db,catname,meta):
 
+    a=json.dumps({"a":"a"})
+    print(a)
+    db.connect()
+    import random
+    name=str(random.randint(1,100000))
+    cat = Categories.create(name=name, metadata=meta)
 
+#    cat = Categories.create(name=json.dumps(catname), metadata=str(json.dumps(meta)))
+
+    cat.save()
+    db.close()
+'''
     try:
         db.connect()
-        cat = Categories.create(name=json.dumps(catname), metadata=json.dumps(meta))
+        cat = Categories.create(name=json.dumps(catname), metadata=jsonify(meta))
+
+#        cat = Categories.create(name=json.dumps(catname), metadata=json.dumps(meta))
         cat.save()
         db.close()
         result='success'
@@ -33,6 +50,8 @@ def create_category(db,catname,meta):
         result='other error'
     print(result)
     return result
+'''
+
 
 # This function is part of testMetaData (see below)
 def verifyStructure(key_,val,master=masterMetaData):
@@ -48,6 +67,8 @@ def verifyStructure(key_,val,master=masterMetaData):
 
 # This function is used to verify Metadata structure (input from categories)
 def testMetaData(ds,master=masterMetaData):
+    print("TEST METADATA")
+    print(ds)
     testResult=[]
     res=''
     for d in ds:
