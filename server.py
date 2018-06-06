@@ -3,10 +3,13 @@ from flask import Flask,request, jsonify
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
 from categories import create_category,validate_category
-from publisher import publish_data
+from publisher import publish_data,getMetadata,fullTest, load_data, record_listing
 from model import db, Categories, Trader
 from peewee import IntegrityError,OperationalError,InternalError
 import simplejson
+from werkzeug.utils import secure_filename
+import ipfsapi, os
+
 
 #from werkzeug.security import safe_str_cmp
 import json
@@ -28,6 +31,8 @@ def identity(payload):
     user = Trader.select().where(Trader.id == user_id).get()
     return user_id
 
+UPLOAD_FOLDER = './uploaded/'
+
 
 app = Flask(__name__)
 CORS(app)
@@ -36,6 +41,8 @@ app.debug = True
 app.config['SECRET_KEY'] = 'secret'
 app.config['JWT_VERIFY_CLAIMS']=['signature', 'exp',  'iat']
 app.config['JWT_REQUIRED_CLAIMS']=['exp',  'iat']
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 jwt = JWT(app, authenticate, identity)
 
@@ -46,7 +53,7 @@ def server_internal_Error(e):
 
 # FROM Categories.py : uses validate_category and create_category
 @app.route('/categories',methods=['POST'])
-@jwt_required()
+#@jwt_required()
 def  categories():
     print("*******  PRINT JSON *************")
     print(request.json)
@@ -111,21 +118,60 @@ def validate_metadata():
 @jwt_required()
 def  publisher():
 
-    json_data=request.get_json()
-    print('REQUEST JSON ')
-    print(json_data)
-    print()
+    print(request.files)
+    print('EXTRACT FILES FOM REQUEST')
+    try:
+        data = request.files['data']
+    except KeyError:
+        return 'Missing Data file'
+
+    try:
+        listing_info=request.files['listing_info']
+    except KeyError:
+        return 'Listing missing'
+
+    print('GET LISTING INFO')
+    f=listing_info.read()
+    f=f.decode("utf-8")
+    listing_info=json.loads(f)
+
+    catname=json.dumps(listing_info['category_name'])
+    price=listing_info['price']
+    filename=listing_info['filename']
+    keywords=listing_info['keywords']
+
+    print(catname, price, filename, keywords)
+
+    print('SAVE FILE')
+    file_name=secure_filename(filename)
+    data.save(os.path.join(app.config['UPLOAD_FOLDER'],file_name))
+
+    print('ADD FILE TO IPFS')
+    api = ipfsapi.connect('127.0.0.1', 5001)
+    res = api.add(os.path.join(app.config['UPLOAD_FOLDER'],file_name))
+    IPFS_hash=res['Hash']
+    filesize=res['Size']
 
 
-#    print(json_data)
-    catname=json.dumps(json_data['category_name'])
-    file_cid=json_data['IPFS_hash']
-    price=json_data['price']
-    filename=json_data['filename']
-    keywords=json_data['keywords']
+
+    print(catname)
+    print('GET METADATA')
+    meta=getMetadata(catname)
+
+    if meta=='Fail':
+        return 'Category doesnt exist'
+
+    print('TEST DATA')
+    df=load_data(os.path.join(app.config['UPLOAD_FOLDER'],file_name),meta)
+    test_result,test_failed=fullTest(df, meta)
+    if test_failed==1:
+        return str(simplejson.dumps(['Test Failed',test_result]))
+
+    print('PUBLISH DATA')
     trader_id=current_identity
+    result=record_listing(db,IPFS_hash,trader_id,filesize,filename,price,catname,keywords)
 
-    result=publish_data (catname, file_cid,trader_id,price,filename,keywords)
+    print ("DATA PUBLISHED SUCCESSFULLY !!!")
 
     return str(simplejson.dumps(result, ignore_nan=True)) # Simple json is used to handle Nan values in test result numpy array TestIsNull
 
@@ -145,6 +191,7 @@ def protected():
 
 
     return '%s' % current_identity
+
 
 if __name__ == '__main__':
     app.run(port=2222)

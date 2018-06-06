@@ -169,7 +169,7 @@ def result_to_csv(wrapped_result,test_folder):
             a=pd.concat(wrapped_result[i],axis=1)
             a.to_csv(test_folder+i)
 
-def fullTest(df, meta, master, test_folder):
+def fullTest(df, meta, master=masterMetaData):
     testResult,testFailed=testData(df,meta)
     print("FULL TEST DONE")
     print(testResult)
@@ -203,6 +203,7 @@ def getMetadata(category_name=None,file_path=None):
             result='Fail'
     return result
 
+
 def record_listing(db,file_cid,trader_id,size,filename,price,catname,keywords):
     # Get category_id
     try:
@@ -228,51 +229,33 @@ def record_listing(db,file_cid,trader_id,size,filename,price,catname,keywords):
 # Filename : string
 # Keywords : string (ex. 'Aviation,Flight Route')
 # Master : masterData
-def publish_data (catname, file_cid,trader_id,price,filename,keywords, master=masterMetaData,test_folder=testdata_path):
+def publish_data (catname, trader_id,price,filename,IPFS_hash,filesize,keywords, master=masterMetaData,test_folder=testdata_path):
+
+    #1- GET METADATA FROM CATEGORY
 
     print("STEP 1 : GET METADATA FROM DB CATEGORY TABLE")
     print("Category name : ", catname)
-    print()
-    #1- Get metadata from Category
     meta=getMetadata(catname)
+    print()
     print("Metadata : ",str(meta))
     print()
+
+    meta=getMetadata(catname)
 
     if meta=='Fail':
         return 'Category doesnt exist'
 
-    #2- upload file to Scry server from IPFS
-    print("STEP 2 : LOAD DATA FROM IPFS")
-    file_path=getIpfsData(file_cid,test_folder) #file_cid = ipfs hash
-
-
-    if file_path=='Wrong Hash':
-        return ('IPFS hash erroneous')
-    else:
-        api = ipfsapi.connect('127.0.0.1', 5001)
-        res = api.add(file_path)
-        print(res)
-        #QmZ4tDuvesekSs4qM5ZBKpXiZGun7S2CYtEZRB3DYXkjGx helloworlds
-        size=res['Size']
-        file_cid=res['Hash']
-
-        df=load_data(file_path,meta)
-        print()
-        print('Test 2 RESULT : successfully loaded file from IPFS')
-        print()
-
-
-    #3  data tested
+    #2 TEST DATA
     print("STEP 4 : VALIDATE DATA")
     test_result,test_failed=fullTest(df, meta, master,test_folder)
-    print('Step 4 : Data has been testesds')
+    print('Step 4 : Data has been testesd')
     print()
     if test_failed==1:
         return ['Test Failed',test_result]
 
-    #4 If no error, publish listing
+    #3 IF NO ERROR, PUBLISH LISTING
 
-    publish_result=record_listing(db,file_cid,trader_id,size,filename,price,catname,keywords)
+    publish_result=record_listing(db,IPFS_hash,trader_id,size,filename,price,catname,keywords)
 
     print ("DATA PUBLISHED SUCCESSFULLY !!!")
     return publish_result

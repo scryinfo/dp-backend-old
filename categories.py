@@ -16,8 +16,8 @@ masterMetaData={
 # receives a dictionary "meta" in the python format ex : {'a':'a'}
 # postgresql transforms it into jsonb format {"a":"a"}
 def create_category(db,catname,meta):
-
     try:
+        db.close()
         db.connect()
         cat = Categories.create(name=json.dumps(catname), metadata=meta)
         cat.save()

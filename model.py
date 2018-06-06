@@ -1,15 +1,15 @@
 import datetime
 from peewee import *
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
 from playhouse.postgres_ext import PostgresqlExtDatabase, BinaryJSONField
 from settings import *
 import psycopg2 as pg2
 import peewee as pe
+from playhouse.shortcuts import model_to_dict
+from flask import jsonify
+
 
 db =  PostgresqlExtDatabase('scry', user=DB_USER,port=5432)
-
-
 
 class Categories(Model):
     name =  CharField(unique=True) # CANNOT CREATE UNIQUE ID
@@ -20,7 +20,7 @@ class Categories(Model):
         database = db
         schema='scry2'
 
-class Trader(UserMixin, Model):
+class Trader(Model):
     name = CharField(unique=True)
     account = CharField()
     created_at = TimestampField(utc=True)
