@@ -226,8 +226,8 @@ def test_categories2(path,jwt_server_path,upayload):
 
 
 
-#print(test_categories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
-#print(test_getcategories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
+print(test_categories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
+print(test_getcategories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
 
 
-print(test_publisher(publisher_path,scry_path,userpayload))
+#print(test_publisher(publisher_path,scry_path,userpayload))

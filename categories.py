@@ -4,11 +4,14 @@ from peewee import IntegrityError,OperationalError,InternalError
 from flask import jsonify
 
 masterMetaData={
-                 "DataType":["String","Int","Float","Date","Datetime"],
+                 "DataType":["String","Int","Float","Date","Datetime","StandardTime"],
                  "IsNull" : ["true","false"],
                  "IsUnique":["true","false"],
                  "ForeignDataHash":"String",
-                 "IsPrimaryKey":["true","false"]
+                 "IsPrimaryKey":["true","false"],
+                 "FieldLength":"Int",
+
+
             }
 
 
@@ -48,6 +51,15 @@ def verifyElement(key_,val,master=masterMetaData):
                 if i==val:
                     return("Success")
             return('No Match')
+        else:
+            if masterValues=="Int":
+                try:
+                    int(val)
+                    return ("Success")
+                except:
+                    return("Not an int")
+            return ("No test for this format yet")
+
     except KeyError:
         return("Key Error")
 
@@ -58,8 +70,9 @@ def validate_category(ds,master=masterMetaData):
     testResult=[]
     res=''
     for d in ds:
-        colname=list(d.keys())[0]
-        val=next(iter(d.values()))
+    #ex : d= {airlineId : {'IsPrimaryKey': 'true', 'IsUnique': 'true', 'DataType': 'Int'}}
+        colname=list(d.keys())[0] # Ex : airlineId
+        val=next(iter(d.values())) # Ex : {'IsPrimaryKey': 'true', 'IsUnique': 'true', 'DataType': 'Int'}
         for key in val:
             res=verifyElement(key,val[key],master)
             if res!='Success':

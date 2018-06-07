@@ -8,6 +8,7 @@ import json
 from peewee import IntegrityError
 import ipfsapi
 import simplejson
+import datetime
 
 
 testdata_path=TEST_DATA_PATH
@@ -32,11 +33,12 @@ def getIpfsData(hash,test_folder):
 
 
 masterMetaData={
-                 "DataType":["String","Int","Float","Date","Datetime"],
+                 "DataType":["String","Int","Float","Date","Datetime","StandardTime"],
                  "IsNull" : ["True","False"],
                  "IsUnique":["True","False"],
                  "ForeignDataHash":"String",
-                 "IsPrimaryKey":["True","False"]
+                 "IsPrimaryKey":["True","False"],
+                 "FieldLength":"Int"
             }
 
 airlineMetaRight={
@@ -91,6 +93,18 @@ def testFloat(df, colname):
     return errors
 
 
+
+def testStandardTime(df,colname):
+    count=0
+    errors=[]
+    for i in df[colname]:
+        try:
+            datetime.datetime.strptime(i,"%Y-%m-%dT%H:%M:%S")
+        except ValueError:
+            errors.append(count)
+        count+=1
+    return errors
+
 # Uses the above function to test data types
 def testDataType(df,colname,testValue):
     if testValue=='Int':
@@ -98,6 +112,9 @@ def testDataType(df,colname,testValue):
 
     elif testValue=='Numeric':
         testResult=testFloat(df,colname)
+
+    elif testValue=='StandardTime':
+        testResult=testStandardTime(df,[])
 
     elif testValue=='Date':
         testResult=testFloat(df,[])

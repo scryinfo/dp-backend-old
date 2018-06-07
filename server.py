@@ -178,6 +178,7 @@ def  publisher():
 @app.route('/getcategories',methods=['POST'])
 @jwt_required()
 def  getcategories():
+    print("GET CATEGORIES")
     cat_list=[]
     for cat in Categories.select():
         cat_list.append(cat.metadata)
