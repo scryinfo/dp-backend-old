@@ -66,8 +66,22 @@ def getColNames (metadata):
 # Load data from a csv, requires metadata and no header
 def load_data(path,meta):
     colnames = getColNames(meta['DataStructure'])
-    df = pd.read_csv(path,names=colnames)
-    return df
+    df = pd.read_csv(path,header=None)
+
+    cols=df.columns.values
+
+    if len(colnames)!=len(cols):
+        return None
+    else:
+        ren={}
+        for i in cols:
+            ren[i]=names[i]
+
+        print (ren)
+
+        df.rename(index=str, columns=ren)
+
+        return df
 
 # The following functions are used to test different aspect of the data
 def testInt(df,colname):
@@ -127,6 +141,8 @@ def testDataType(df,colname,testValue):
     return testResult
 
 def testIsNull(df,colname):
+    print('IS NULL')
+    print(df)
     errors=(list(df[df[colname].isnull()].index))
     return errors
 
@@ -141,6 +157,7 @@ def testData(df,meta):
     testResult=[]
     tr=[]
     testFailed=0
+
 
     for i in meta['DataStructure']:
         colname=list(i.keys())[0]

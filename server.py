@@ -1,5 +1,5 @@
 #JWT TOKEN eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJuYW1lIjoiMjIiLCJhY2NvdW50IjoiMHg0MDc4NDA3YzlhNGIxNzNmNjc5ZTQ3MGY1YjE2N2FmMmQ3MTU2NDFiIiwiaWF0IjoxNTI3NTAwNDkzLCJleHAiOjE1Mjc3MTY0OTN9._-HKiuAc_LUJOHrY5hUAOPMaBY2dxAAQAVr7Q0RblOU
-from flask import Flask,request, jsonify
+from flask import Flask,request, jsonify,make_response, render_template, Response
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
 from categories import create_category,validate_category
@@ -9,6 +9,8 @@ from peewee import IntegrityError,OperationalError,InternalError
 import simplejson
 from werkzeug.utils import secure_filename
 import ipfsapi, os
+
+
 
 
 #from werkzeug.security import safe_str_cmp
@@ -43,12 +45,20 @@ app.config['JWT_VERIFY_CLAIMS']=['signature', 'exp',  'iat']
 app.config['JWT_REQUIRED_CLAIMS']=['exp',  'iat']
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+print(app.config['MAX_CONTENT_LENGTH'])
 
 jwt = JWT(app, authenticate, identity)
 
-@app.errorhandler(500)
+@app.errorhandler(401)
 def server_internal_Error(e):
-    return 'interal error', 500
+    return jsonify({
+      "description": "Signature verification failed",
+      "error": "Invalid token",
+      "status_code": 401
+    }), 401
+
+
+
 
 
 # FROM Categories.py : uses validate_category and create_category
@@ -123,12 +133,11 @@ def  publisher():
     try:
         data = request.files['data']
     except KeyError:
-        return 'Missing Data file'
-
+        return make_response(jsonify({'status':'error','message':'Data missing'}),422)
     try:
         listing_info=request.files['listing_info']
     except KeyError:
-        return 'Listing missing'
+        return make_response(jsonify({'status':'error','message':'Listing missing'}),422)
 
     print('GET LISTING INFO')
     f=listing_info.read()
@@ -159,13 +168,20 @@ def  publisher():
     meta=getMetadata(catname)
 
     if meta=='Fail':
-        return 'Category doesnt exist'
+
+        return make_response(jsonify({'status':'error','message':'Category doesnt exist'}),422)
 
     print('TEST DATA')
     df=load_data(os.path.join(app.config['UPLOAD_FOLDER'],file_name),meta)
+    if df is None:
+        return make_response(jsonify({'status':'error','message':'Data file column number doesnt match metadata'}),422)
+
+
     test_result,test_failed=fullTest(df, meta)
     if test_failed==1:
-        return str(simplejson.dumps(['Test Failed',test_result]))
+        return str(simplejson.dumps(['Test Failed',test_result], ignore_nan=True))
+
+
 
     print('PUBLISH DATA')
     trader_id=current_identity
