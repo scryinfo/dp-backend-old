@@ -70,16 +70,22 @@ def load_data(path,meta):
 
     cols=df.columns.values
 
+    # Test if number of columns in metadata matches file
     if len(colnames)!=len(cols):
         return None
     else:
+    # Rename the DataFrame column names to match metadata
         ren={}
         for i in cols:
-            ren[i]=names[i]
+            ren[i]=colnames[i]
 
         print (ren)
 
-        df.rename(index=str, columns=ren)
+        df=df.rename(index=str, columns=ren)
+
+        print(df)
+
+
 
         return df
 
@@ -91,18 +97,19 @@ def testInt(df,colname):
         try:
             int(i)
         except ValueError:
-            errors.append(count)
+            errors.append(str(count))
         count+=1
     return errors
 
 def testFloat(df, colname):
+    print("TEST FLOAT")
     count=0
     errors=[]
     for i in df[colname]:
         try:
             float(i)
         except ValueError:
-            errors.append(count)
+            errors.append(str(count))
         count+=1
     return errors
 
@@ -124,29 +131,28 @@ def testDataType(df,colname,testValue):
     if testValue=='Int':
          testResult=testInt(df,colname)
 
-    elif testValue=='Numeric':
+    elif testValue=='Float':
         testResult=testFloat(df,colname)
 
     elif testValue=='StandardTime':
         testResult=testStandardTime(df,[])
 
     elif testValue=='Date':
-        testResult=testFloat(df,[])
+        testResult=[]
 
     elif testValue=='DateTime':
-        testResult=testFloat(df,[])
+        testResult=[]
 
     else:
-        testResult=testFloat(df,[])
+        testResult=[]
     return testResult
 
 def testIsNull(df,colname):
-    print('IS NULL')
-    print(df)
     errors=(list(df[df[colname].isnull()].index))
     return errors
 
 def testIsUnique(df,colname):
+    print('IS UNIQUE')
     dup = df[colname][df[colname].duplicated(keep=False)]
     dup = dup[dup.notnull()] # Eliminate duplicated "Nulls"vprint(errors)
     return list(dup.index)
@@ -162,7 +168,8 @@ def testData(df,meta):
     for i in meta['DataStructure']:
         colname=list(i.keys())[0]
         dataTest=list(i.values())[0]
-
+        print(colname, dataTest)
+        testNull=True
         for test in dataTest:
             testValue=dataTest[test]
             if test=='DataType':
@@ -170,7 +177,7 @@ def testData(df,meta):
             elif test=='IsUnique':
                 tr=testIsUnique(df,colname)
             elif test=='IsNull' and testValue=='true':
-                tr=testIsNull(df,colname)
+                testNull = False
             else:
                 tr=[]
 #            print(tr, type(tr))
@@ -179,6 +186,17 @@ def testData(df,meta):
             testResult.append(r)
             if len(tr)>0:
                 testFailed=1
+
+        if testNull:
+            tr=testIsNull(df,colname)
+            r=[colname,'IsNull',tr]
+
+            testResult.append(r)
+            if len(tr)>0:
+                testFailed=1
+        print(tr)
+
+
     return testResult,testFailed #TestResult format [Column name, TestName, Rows that failed the text (array)]
 
 
@@ -188,13 +206,22 @@ def wrapResult(df, testResult,master):
     for j in master:
         dataFrames[j]=[]
 
+    print("WRAP RESULT")
+    print(testResult)
+
+    print('DATA FRAME')
+    print(df)
+    print(df.index)
+
     for i in testResult:
         if len(i[2])>0:
             a=pd.DataFrame(df.loc[i[2],i[0]])
             a=[a.columns.tolist()][0] + a.reset_index().values.tolist()
 #            a=a.values.tolist()
             dataFrames[i[1]].append(a)
+
 #    print(type(dataFrames))
+
     return dataFrames
 
 def result_to_csv(wrapped_result,test_folder):
