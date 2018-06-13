@@ -1,0 +1,50 @@
+{
+	"CategoryName": ["Aviation", "Commercial", "Airline_Float"],
+	"DataStructure": [{
+			"AirlineId": {
+				"DataType": "Float",
+				"IsUnique": "true",
+				"IsNull": "true",
+				"IsPrimaryKey": "true"
+			}
+
+		},
+		{
+			"Name": {
+				"DataType": "String"
+			}
+		},
+		{
+			"Alias": {
+				"DataType": "String"
+			}
+		},
+
+		{
+			"IATA": {
+				"DataType": "String"
+			}
+		},
+		{
+			"ICAO": {
+				"DataType": "String"
+			}
+		},
+		{
+			"Callsign": {
+				"DataType": "String"
+			}
+		},
+		{
+			"Country": {
+				"DataType": "String"
+			}
+		},
+		{
+			"Active": {
+				"DataType": "String"
+			}
+		}
+
+	]
+}

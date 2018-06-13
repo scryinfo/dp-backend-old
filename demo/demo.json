@@ -1,0 +1,31 @@
+[
+{
+  "Data":"airlines_null.dat",
+  "Listing":"Airlines_listing.json"
+},
+{
+  "Data":"airlines_duplicate.dat",
+  "Listing":"Airlines_listing.json"
+},
+{
+  "Data":"airlines_int.dat",
+  "Listing":"Airlines_listing.json"
+}
+,
+{
+  "Data":"airlines_float.dat",
+  "Listing":"Airlines_listing_float.json"
+}
+,
+{
+  "Data":"schedule.csv",
+  "Listing":"Schedule_listing.json"
+}
+,
+{
+  "Data":"schedule2.csv",
+  "Listing":"Schedule_listing.json"
+}
+
+
+]

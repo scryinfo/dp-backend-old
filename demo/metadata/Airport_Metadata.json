@@ -1,0 +1,80 @@
+{
+	"CategoryName": ["Aviation", "Commercial", "Airport"],
+	"DataStructure": [{
+			"AirportId": {
+				"DataType": "Int",
+				"IsUnique": "true",
+				"IsNull": "true",
+				"IsPrimaryKey": "true"
+			}
+
+		},
+		{
+			"AirportName": {
+				"DataType": "String",
+				"IsUnique": "true"
+			}
+		},
+		{
+			"City": {
+				"DataType": "String"
+			}
+		},
+
+		{
+			"Country": {
+				"DataType": "String"
+			}
+		},
+		{
+			"IATA": {
+				"DataType": "String"
+			}
+		},
+		{
+			"ICAO": {
+				"DataType": "String"
+			}
+		},
+		{
+			"Latitude": {
+				"DataType": "Float"
+			}
+		},
+		{
+			"Longitude": {
+				"DataType": "Float"
+			}
+		},
+		{
+			"Altitude": {
+				"DataType": "Float"
+			}
+		},
+		{
+			"Timezone": {
+				"DataType": "Float"
+			}
+		},
+		{
+			"DST": {
+				"DataType": "String"
+			}
+		},
+		{
+			"Tz_database_time": {
+				"DataType": "String"
+			}
+		},
+		{
+			"Type": {
+				"DataType": "String"
+			}
+		},
+		{
+			"Source": {
+				"DataType": "String"
+			}
+		}
+	]
+}

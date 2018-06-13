@@ -1,0 +1,17 @@
+{
+  "Airlines":
+  {
+  "FileName":"Airline_Metadata.json",
+  "IPFS_hash":"Qmao4wg8KPxqjpcNsN55dJXxJ3kuBwMQSZ26SFemqMBUm7"
+  },
+  "Airports":
+  {
+  "FileName":"Airport_Metadata.json",
+  "IPFS_hash":"QmfUo8gH3fswXmKoHPw3kuzdY2owhVtfco2Ef14fTqXzpD"
+  },
+  "Routes":
+  {
+  "FileName":"Route_Metadata.json",
+  "IPFS_hash":"QmT9eEvuM51bVQQnxKjJExYfYp8Yca9HzrhfsuZ81Y7SyT"
+  }
+}

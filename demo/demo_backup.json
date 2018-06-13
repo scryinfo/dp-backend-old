@@ -1,0 +1,23 @@
+[
+{
+  "Data":"airlines.dat",
+  "Listing":"Airlines_listing.json"
+},
+{
+  "Data":"airlines10lines.dat",
+  "Listing":"Airlines_listing.json"
+},
+
+{
+  "Data":"airports.dat",
+  "Listing":"Airports_listing.json"
+},
+{
+  "Data":"routes.dat",
+  "Listing":"Routes_listing.json"
+},
+{
+  "Data":"schedule.csv",
+  "Listing":"Schedule_listing.json"
+}
+]
