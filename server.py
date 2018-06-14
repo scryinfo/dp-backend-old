@@ -4,11 +4,12 @@ from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
 from categories import create_category,validate_category
 from publisher import publish_data,getMetadata,fullTest, load_data, record_listing
-from model import db, Categories, Trader
+from model import db, Categories, Trader, Listing
 from peewee import IntegrityError,OperationalError,InternalError
 import simplejson
 from werkzeug.utils import secure_filename
 import ipfsapi, os
+from playhouse.shortcuts import model_to_dict
 
 
 
@@ -23,7 +24,7 @@ def authenticate(username, password):
     except:
         user = None
 
-    return user
+    return u
 
 def identity(payload):
     try:
@@ -177,6 +178,7 @@ def  publisher():
         return make_response(jsonify({'status':'error','message':'Data file column number doesnt match metadata'}),422)
 
 
+
     test_result,test_failed=fullTest(df, meta)
     if test_failed==1:
         return str(simplejson.dumps(['Test Failed',test_result], ignore_nan=True))
@@ -201,6 +203,21 @@ def  getcategories():
     db.close()
 
     return jsonify(cat_list)
+
+@app.route('/listing_by_categories',methods=['GET'])
+@jwt_required()
+def  listing_by_categories():
+    cat_id = request.args.get('category_id')
+    print(cat_id)
+
+    cat_list=[]
+    for l in Listing.select().where(Listing.categoryId == cat_id):
+        li=model_to_dict(l, exclude=[l.cid])
+        cat_list.append(li)
+    db.close()
+    return jsonify(cat_list)
+
+
 
 @app.route('/protected')
 @jwt_required()

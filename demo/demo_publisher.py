@@ -81,7 +81,16 @@ def publish_data_no_listing(data_file,listing_file,publisher_path=publisher_path
     result=r.text
     print(result)
 
+def listing_category_id(cat_id,publisher_path=publisher_path,scry_path=scry_path,userpayload=userpayload):
+    jwtToken=get_jwt_scry(scry_path,userpayload)
+    headers = {"Authorization": "JWT "+jwtToken}
 
+    payload = {'category_id': cat_id}
+    r = requests.get(publisher_path+'listing_by_categories',params=payload,headers=headers)
+
+
+    result=r.text
+    print(result)
 
 
 
@@ -108,15 +117,13 @@ meta_path='/home/chuck/scry3/publisher/demo/metadata/'
 meta_files=os.listdir(meta_path)
 
 # CREATE CATEGORIES
-for files in meta_files:
-    metadata=json.load(open(meta_path+files))
-    create_category(metadata)
+#for files in meta_files:
+#    metadata=json.load(open(meta_path+files))
+#    create_category(metadata)
 
 
-for i in test_data:
-    print (i['Listing'])
-    print(publish_data(data_path+i['Data'],listing_path+i['Listing']))
+#for i in test_data:
+#    print (i['Listing'])
+#    print(publish_data(data_path+i['Data'],listing_path+i['Listing']))
 
-
-#print(get_jwt_scry(scry_path,userpayload))
-#print(get_categories())
+print(listing_category_id(217))
