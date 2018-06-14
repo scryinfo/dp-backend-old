@@ -193,7 +193,7 @@ def  publisher():
 
     return str(simplejson.dumps(result, ignore_nan=True)) # Simple json is used to handle Nan values in test result numpy array TestIsNull
 
-@app.route('/getcategories',methods=['POST'])
+@app.route('/getcategories',methods=['GET'])
 @jwt_required()
 def  getcategories():
     print("GET CATEGORIES")

@@ -38,7 +38,7 @@ def get_categories(path=publisher_path,jwt_server_path=scry_path,user_payload=us
     jwtToken=get_jwt_scry(jwt_server_path,user_payload)
     headers = {"Authorization": "JWT "+jwtToken}
 
-    r = requests.post(path+'getcategories',json='{"a":"a"}',headers=headers)
+    r = requests.get(path+'getcategories',json='{"a":"a"}',headers=headers)
     result=r.text
     return result
 
@@ -126,4 +126,19 @@ meta_files=os.listdir(meta_path)
 #    print (i['Listing'])
 #    print(publish_data(data_path+i['Data'],listing_path+i['Listing']))
 
+#print(listing_category_id(51))
 print(listing_category_id(217))
+
+def all_listings (owner_id,publisher_path=publisher_path,scry_path=scry_path,userpayload=userpayload):
+    jwtToken=get_jwt_scry(scry_path,userpayload)
+    headers = {"Authorization": "JWT "+jwtToken}
+
+    payload = {'owner': owner_id}
+    r = requests.get(scry_path+'listing',params=payload,headers=headers)
+
+
+    result=r.text
+    print(result)
+
+
+#print(all_listings(8))

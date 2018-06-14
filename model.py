@@ -44,7 +44,9 @@ class Trader(Model):
 class Listing(Model):
     cid = CharField()
     size = CharField()
-    ownerId = IntegerField()#ForeignKeyField(Trader, related_name='listings')
+    ownerId = ForeignKeyField(Trader, db_column='ownerId', related_name='listings',  to_field=Trader.id)
+
+#    ownerId = IntegerField()#ForeignKeyField(Trader, related_name='listings')
     name = CharField()
     price = DecimalField(constraints=[Check('price > 0')])
 #    created_at = TimestampField()

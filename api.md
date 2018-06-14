@@ -89,21 +89,29 @@ RESPONSE:
 
  ```
  [
- {
-    "CategoryName": [
-      "Cat1",
-      "Subcategory1",
-      "Subcategory2"
-    ],
-    "DataStructure": [
-      {
-        "Col1": {
-          "DataType": "String"
-        }
-      }
-    ]
-  }
-  ]
+    {
+  	"id": 63,
+  	"metadata": {
+  		"CategoryName": [
+  			"Cat1",
+  			"Subcategory1",
+  			"Subcategory2"
+  		],
+  		"DataStructure": [
+  		  {
+  			"Col1": {
+  				"DataType": "String"
+  			}
+  			}
+  		]
+  	},
+  	"name": [
+  		"Cat1",
+  		"Subcategory1",
+  		"Subcategory2"
+  	]
+}
+]
   ```
 
 
@@ -132,11 +140,11 @@ INPUT
 - filename : name of the file that will be listed on scry.info and downloaded
 - keyword : keywords related to the file that can be searched on scry.
 
-  ```
+```
   {
     "category_name":["Aviation", "Commercial", "Airline"],
     "price":1000,
     "filename":"Airlines.csv",
     "keywords":"Commercial Airlines"
   }
-  ```
+```
