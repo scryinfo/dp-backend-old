@@ -44,7 +44,7 @@ class Trader(Model):
 class Listing(Model):
     cid = CharField()
     size = CharField()
-    ownerId = ForeignKeyField(Trader, db_column='ownerId', related_name='listings',  to_field=Trader.id)
+    owner = ForeignKeyField(Trader, db_column='ownerId', related_name='listings',  to_field=Trader.id)
 
 #    ownerId = IntegerField()#ForeignKeyField(Trader, related_name='listings')
     name = CharField()
