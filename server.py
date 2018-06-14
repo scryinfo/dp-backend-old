@@ -24,7 +24,7 @@ def authenticate(username, password):
     except:
         user = None
 
-    return u
+    return user
 
 def identity(payload):
     try:
@@ -199,7 +199,8 @@ def  getcategories():
     print("GET CATEGORIES")
     cat_list=[]
     for cat in Categories.select():
-        cat_list.append(cat.metadata)
+        c=model_to_dict(cat)
+        cat_list.append(c)
     db.close()
 
     return jsonify(cat_list)
