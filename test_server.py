@@ -165,8 +165,8 @@ def test_getcategories(path,jwt_server_path,payload):
 publisher_path='http://localhost:2222/'
 scry_path='http://localhost:1234/'
 userpayload={'username':'22','password':'22'}
-#scry_path='https://dev.scry.info:443/scry2/'
-#publisher_path='https://dev.scry.info:443/meta/'
+scry_path='https://dev.scry.info:443/scry2/'
+publisher_path='https://dev.scry.info:443/meta/'
 
 #print(test_no_json(publisher_path)=='Not Json')
 #print(test_no_categories(publisher_path)=='{"Result": "No Category"}')
@@ -225,9 +225,27 @@ def test_categories2(path,jwt_server_path,upayload):
 
 
 
+def search_keywords(keywords,searchtype,publisher_path=publisher_path,scry_path=scry_path,userpayload=userpayload):
+    jwtToken=test_jwt_scry(scry_path,userpayload)
+    headers = {"Authorization": "JWT "+jwtToken}
 
-print(test_categories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
-print(test_getcategories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
+    payload = {
+        'keywords': keywords,
+        'searchtype' : searchtype
+        }
+    r = requests.get(publisher_path+'search_keywords',params=payload,headers=headers)
+
+
+    result=r.text
+    print(result)
+
+
+search_keywords('airline schedule','["category","keywords"]')
+
+#print(test_categories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
+#print(test_getcategories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
 
 
 #print(test_publisher(publisher_path,scry_path,userpayload))
+
+https://dev.scry.info:443/meta/search_keywords?keywords='schedule airline'&searchtype=["category","keywords"]

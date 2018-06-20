@@ -206,7 +206,7 @@ def  getcategories():
     return jsonify(cat_list)
 
 @app.route('/search_keywords',methods=['GET'])
-@jwt_required()
+#@jwt_required()
 def search_keywords():
     print("SEARCH KEYWORDS")
     # keywords / category
