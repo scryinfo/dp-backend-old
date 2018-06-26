@@ -49,7 +49,7 @@ class Listing(Model):
 #    ownerId = IntegerField()#ForeignKeyField(Trader, related_name='listings')
     name = CharField()
     price = DecimalField(constraints=[Check('price > 0')])
-    created_at = TimestampField()
+#    created_at = TimestampField()
     keywords = CharField(null=True)
     isstructured = BooleanField(null=True)
     categoryId = IntegerField()

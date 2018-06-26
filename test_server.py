@@ -239,7 +239,6 @@ def search_keywords(keywords,searchtype,publisher_path=publisher_path,scry_path=
     result=r.text
     print(result)
 
-
 search_keywords('airline schedule','["category","keywords"]')
 
 #print(test_categories(publisher_path,scry_path,userpayload)=='{"Result": "Category Created"}')
@@ -247,5 +246,3 @@ search_keywords('airline schedule','["category","keywords"]')
 
 
 #print(test_publisher(publisher_path,scry_path,userpayload))
-
-https://dev.scry.info:443/meta/search_keywords?keywords='schedule airline'&searchtype=["category","keywords"]

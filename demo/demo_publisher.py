@@ -6,8 +6,8 @@ metadata_path='./metadata/'
 publisher_path='http://localhost:2222/'
 scry_path='http://localhost:1234/'
 userpayload={'username':'22','password':'22'}
-#scry_path='https://dev.scry.info:443/scry2/'
-#publisher_path='https://dev.scry.info:443/meta/'
+scry_path='https://dev.scry.info:443/scry2/'
+publisher_path='https://dev.scry.info:443/meta/'
 
 
 
@@ -52,7 +52,7 @@ def publish_data(data_file,listing_file,publisher_path=publisher_path,scry_path=
     f2= open(listing_file)
     files = {'data': f1,'listing_info':f2}
 
-
+    print (files)
     r = requests.post(publisher_path+'publisher',files=files,headers=headers)
     result=r.text
     print(result)
@@ -122,12 +122,12 @@ meta_files=os.listdir(meta_path)
 #    create_category(metadata)
 
 
-#for i in test_data:
-#    print (i['Listing'])
-#    print(publish_data(data_path+i['Data'],listing_path+i['Listing']))
+for i in test_data:
+    print (i['Listing'])
+    print(publish_data(data_path+i['Data'],listing_path+i['Listing']))
 
 #print(listing_category_id(51))
-print(listing_category_id(217))
+#print(listing_category_id(217))
 
 def all_listings (owner_id,publisher_path=publisher_path,scry_path=scry_path,userpayload=userpayload):
     jwtToken=get_jwt_scry(scry_path,userpayload)

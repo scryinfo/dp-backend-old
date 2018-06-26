@@ -71,55 +71,11 @@ RESPONSE:
  ```
 
 
- ## GET CATEGORIES
- Get all categories and related metadata
-
- ```
- POST https://dev.scry.info:443/meta/getcategories
- ```
-
- AUTHENTICATION
-
- Headers :
- ```
- "Authorization : JWT JwtToken"
- ```
-
- RESPONSE:
-
- ```
- [
-    {
-  	"id": 63,
-  	"metadata": {
-  		"CategoryName": [
-  			"Cat1",
-  			"Subcategory1",
-  			"Subcategory2"
-  		],
-  		"DataStructure": [
-  		  {
-  			"Col1": {
-  				"DataType": "String"
-  			}
-  			}
-  		]
-  	},
-  	"name": [
-  		"Cat1",
-  		"Subcategory1",
-  		"Subcategory2"
-  	]
-}
-]
-  ```
-
-
 
   ## PUBLISH DATA
 
 
-  Get all categories and related metadata
+  To publish data
 
   ```
   GET https://dev.scry.info:443/meta/getcategories
@@ -135,31 +91,38 @@ RESPONSE:
 INPUT
 
 
+Multiple file post, enctype="multiparnt/form-data".
+
+1) The first file should have name "data" and should contain a csv without headers.
+2) The second file should be named "listing_info "
+
+Listing info :
 - category_name : extracted from "/getcategories" above. Must match exact values.
 - price : price of the listing
 - filename : name of the file that will be listed on scry.info and downloaded
 - keyword : keywords related to the file that can be searched on scry.
 
 ```
-  {
-    "category_name":["Aviation", "Commercial", "Airline"],
-    "price":1000,
-    "filename":"Airlines.csv",
-    "keywords":"Commercial Airlines"
-  }
+   {
+     "category_name":["Aviation", "Commercial", "Airline"],
+     "price":1000,
+     "filename":"Airlines.csv",
+     "keywords":"Commercial Airlines"
+   }
 ```
 
 
 
 
-  ## QUERY KEYWORDS
+  ## LISTING QUERY BY KEYWORDS
 
 
-  Get all categories and related metadata.
-  The if more than one keyword is provided, a "OR" is applied.
+  Keywords based listin gsearch function.
+  The funnction can search by categoryname, keywords provided by publisher or both.
+  If more than one keyword is provided, a "OR" is applied.
   The function tokenizes using postgresql to vector so plural and verb tenses are handled.
 
-  Ex. aviation and aviations will be considered as the same.
+    Ex. aviation and aviations will be considered as the same.
 
   ```
   GET https://dev.scry.info:443/meta/search_keywords

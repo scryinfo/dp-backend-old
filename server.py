@@ -168,26 +168,26 @@ def  publisher():
     print('GET METADATA')
     meta=getMetadata(catname)
 
-    if meta=='Fail':
+    if meta == 'Fail':
 
         return make_response(jsonify({'status':'error','message':'Category doesnt exist'}),422)
 
     print('TEST DATA')
-    df=load_data(os.path.join(app.config['UPLOAD_FOLDER'],file_name),meta)
+    df = load_data(os.path.join(app.config['UPLOAD_FOLDER'],file_name),meta)
     if df is None:
         return make_response(jsonify({'status':'error','message':'Data file column number doesnt match metadata'}),422)
 
 
 
-    test_result,test_failed=fullTest(df, meta)
-    if test_failed==1:
+    test_result, test_failed=fullTest (df, meta)
+    if test_failed == 1:
         return str(simplejson.dumps(['Test Failed',test_result], ignore_nan=True))
 
 
 
-    print('PUBLISH DATA')
-    trader_id=current_identity
-    result=record_listing(db,IPFS_hash,trader_id,filesize,filename,price,catname,keywords)
+    print ('PUBLISH DATA')
+    trader_id = current_identity
+    result = record_listing (db, IPFS_hash, trader_id, filesize, filename, price, catname, keywords)
 
     print ("DATA PUBLISHED SUCCESSFULLY !!!")
 
