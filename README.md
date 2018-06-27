@@ -1,24 +1,11 @@
 # INSTALLATION INSTRUCTIONS
 
 
-Create virtualenv (only once)
-
-
+Create virtualenv and install dependencies
 ```
-python3 -m venv
+ . ./init.sh
 ```
 
-Activate virtual environment
-
-```
-source venv/bin/activate
-```
-
-
-Install requirements
-```
-pip install -r requirements.txt
-```
 
 Start server
 ```
