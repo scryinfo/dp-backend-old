@@ -1,30 +1,36 @@
 [
 {
+  "TestName":"Null_in_NotNull_Column",
   "Data":"airlines_null.dat",
-  "Listing":"Airlines_listing.json"
+  "Listing":"Airlines_listing.json",
+  "TestResult":"[\"Test Failed\", {\"DataType\": [], \"FieldLength\": [], \"IsNull\": [[\"IATA\", [\"2\", null]], [\"ICAO\", [\"0\", null], [\"1\", null]], [\"Callsign\", [\"1\", null]], [\"Country\", [\"1\", null]]], \"IsUnique\": [], \"IsPrimaryKey\": [], \"ForeignDataHash\": []}]"
 },
 {
+  "TestName":"Duplicates_in_Unique_Column",
   "Data":"airlines_duplicate.dat",
-  "Listing":"Airlines_listing.json"
+  "Listing":"Airlines_listing.json",
+  "TestResult":"[\"Test Failed\", {\"DataType\": [], \"FieldLength\": [], \"IsNull\": [], \"IsUnique\": [[\"AirlineId\", [\"2\", 2], [\"3\", 2]]], \"IsPrimaryKey\": [], \"ForeignDataHash\": []}]"
 },
 {
+  "TestName":"Float_and_String_in_int_Column",
   "Data":"airlines_int.dat",
-  "Listing":"Airlines_listing.json"
+  "Listing":"Airlines_listing.json",
+  "TestResult":"[\"Test Failed\", {\"DataType\": [[\"AirlineId\", [\"1\", \"1.1\"], [\"2\", \"2a\"]]], \"FieldLength\": [], \"IsNull\": [], \"IsUnique\": [], \"IsPrimaryKey\": [], \"ForeignDataHash\": []}]"
+
 }
 ,
 {
+  "TestName":"String_in_float_Column",
   "Data":"airlines_float.dat",
-  "Listing":"Airlines_listing_float.json"
+  "Listing":"Airlines_listing_float.json",
+  "TestResult":"[\"Test Failed\", {\"DataType\": [[\"AirlineId\", [\"2\", \"2a\"]]], \"FieldLength\": [], \"IsNull\": [], \"IsUnique\": [], \"IsPrimaryKey\": [], \"ForeignDataHash\": []}]"
 }
 ,
 {
+  "TestName":"Schedule1",
   "Data":"schedule.csv",
-  "Listing":"Schedule_listing.json"
-}
-,
-{
-  "Data":"schedule2.csv",
-  "Listing":"Schedule_listing.json"
+  "Listing":"Schedule_listing.json",
+  "TestResult":"\"Success\""
 }
 
 
