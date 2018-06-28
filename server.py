@@ -181,7 +181,7 @@ def  publisher():
 
     test_result, test_failed=fullTest (df, meta)
     if test_failed == 1:
-        return str(simplejson.dumps(['Test Failed',test_result], ignore_nan=True))
+        return str(simplejson.dumps(['Test Failed',test_result], ignore_nan=True, sort_keys=True))
 
 
 
@@ -245,7 +245,6 @@ def search_keywords():
           SELECT id
           FROM scry2.categories
          WHERE {} @@ to_tsquery('{}')
-
           );
         """.format(query_type,keywords)
 
@@ -284,8 +283,6 @@ def  listing_by_categories():
 @app.route('/protected')
 @jwt_required()
 def protected():
-
-
     return '%s' % current_identity
 
 
