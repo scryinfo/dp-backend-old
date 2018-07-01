@@ -160,10 +160,10 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(test_categories(publisher_path,scry_path,userpayload),'{"Result": "CategoryName already exists"}')
 
     def test_create_categories(self):
-        self.assertEqual(test_no_categories(publisher_path), '{"Result": "No CategoryName"}')
+        self.assertEqual(test_no_categories(publisher_path), '{"Result": "No \'CategoryName\'"}')
 
     def test_no_datastructure(self):
-        self.assertEqual(test_no_datastructure(publisher_path),'{"Result": "No DataStructure"}')
+        self.assertEqual(test_no_datastructure(publisher_path),'{"Result": "No \'DataStructure\'"}')
 
     def test_categories_dirty(self):
         self.assertEqual(test_categories_dirty(publisher_path),'{"Result": "Metadata Error", "DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"]]}')

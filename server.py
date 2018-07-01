@@ -76,10 +76,6 @@ def categories():
     data=request.get_json()
     print(data)
 
-    # for key in ['CategoryName', 'DataStructure']:
-    #     if key not in data.keys():
-    #         return json.dumps({'Result':'No %s' % key})
-
     try:
         #TEST 4 : Test Metadata
         test_data=validate_category(data['DataStructure'])
