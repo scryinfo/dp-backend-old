@@ -65,45 +65,38 @@ def server_internal_Error(e):
 # FROM Categories.py : uses validate_category and create_category
 @app.route('/categories',methods=['POST'])
 #@jwt_required()
-def  categories():
+def categories():
     print("*******  PRINT JSON *************")
     print(request.json)
     print()
-    # TEST 1 : Is it a JSON
-    if request.is_json:
-        data=request.get_json()
-        json_data=data
 
-        print(data)
-        # TEST 2 : Category Name True
-        try:
-            catname=data['CategoryName']
-        except KeyError:
-            return json.dumps({'Result':'No Category'})
+    if not request.is_json:
+        return json.dumps({'Result': 'Not Json'})
 
+    data=request.get_json()
+    print(data)
 
-        # TEST 3 : DataStructure True
-        try:
-            meta=data['DataStructure']
-        except:
-            return json.dumps({'Result':'No Data Structure'})
+    for key in ['CategoryName', 'DataStructure']:
+        if key not in data.keys():
+            return json.dumps({'Result':'No %s' % key})
 
-        #TEST 4 : Test Metadata
-        test_data=validate_category(meta)
-        if validate_category(data['DataStructure'])!=['Passed']:
-            return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
+    #TEST 4 : Test Metadata
+    test_data=validate_category(data['DataStructure'])
+    if test_data != []:
+        return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
 
-        #TEST 5 : Create Data
-        rs=create_category(db, catname,data)
+    #TEST 5 : Create Data
+    rs=create_category(db, data['CategoryName'],data)
 #        rs=create_category(db, catname,json_data)
-        if rs=='already exists':
-            return json.dumps({'Result':'Category Name already exists'})
-        elif rs=='success':
-            return json.dumps({'Result':'Category Created'})
-        else:
-            return json.dumps({'Result':'Category Not Created'})
+    if rs=='already exists':
+        return json.dumps({'Result':'CategoryName already exists'})
+    elif rs=='success':
+        return json.dumps({'Result':'Category Created'})
     else:
-        return json.dumps({'Result':'Not Json'})
+        return json.dumps({'Result':'Category Not Created'})
+
+    return json.dumps(['unexpected end'])
+
 
 @app.route('/validate_category',methods=['POST'])
 @jwt_required()
@@ -118,10 +111,9 @@ def validate_metadata():
 
 
     test_data=validate_category(meta)
-    if validate_category(data['DataStructure'])!=['Passed']:
-        return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
-    else:
-         return "Data matches metadata defitinion"
+    if test_data == []:
+        return "Data matches metadata defitinion"
+    return json.dumps({'Result': 'Metadata Error', 'DataErrors':test_data})
 
 
 
