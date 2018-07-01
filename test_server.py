@@ -171,7 +171,7 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(test_no_datastructure(publisher_path),'{"Result": "No Data Structure"}')
 
     def test_categories_dirty(self):
-        self.assertEqual(test_categories_dirty(publisher_path),'{"Result": "Metadata Error", "DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"]]}')
+        self.assertEqual(test_categories_dirty(publisher_path),'{"DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"]], "Result": "Metadata Error"}')
 #        '{"DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"], ["AirlineName", "DataType", "Strings", "No Match"]], "Result": "Metadata Error"}')
 
 
@@ -298,12 +298,14 @@ class PublisherTest(unittest.TestCase):
 
 
 
-
-
-
-
 if __name__ == '__main__':
     unittest.main()
+
+
+
+
+
+
 
 
 ## SEARCH KEYWORDS FUNCTION HAS A BUG
