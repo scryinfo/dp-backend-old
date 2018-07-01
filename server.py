@@ -77,25 +77,19 @@ def categories():
     print(data)
 
     try:
-        #TEST 4 : Test Metadata
-        test_data=validate_category(data['DataStructure'])
+        test_data = validate_category(data['DataStructure'])
         if test_data != []:
-            return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
+            return json.dumps({'Result': 'Metadata Error', 'DataErrors': test_data})
 
-        #TEST 5 : Create Data
-        rs=create_category(db, data['CategoryName'],data)
-    #        rs=create_category(db, catname,json_data)
-        if rs=='already exists':
-            return json.dumps({'Result':'CategoryName already exists'})
-        elif rs=='success':
-            return json.dumps({'Result':'Category Created'})
-        else:
-            return json.dumps({'Result':'Category Not Created'})
+        create_category(db, data['CategoryName'], data)
+        return json.dumps({'Result': 'Category Created'})
 
     except KeyError as e:
         return json.dumps({'Result': 'No %s' % str(e)})
+    except IntegrityError:
+        return json.dumps({'Result': "CategoryName already exists"})
     except Exception as e:
-        return json.dumps({'Result': str(e)})
+          return json.dumps({'Result': str(type(e)) + ":" + str(e)})
 
     return json.dumps(['unexpected end'])
 

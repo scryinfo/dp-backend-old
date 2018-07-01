@@ -166,7 +166,7 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(test_no_datastructure(publisher_path),'{"Result": "No \'DataStructure\'"}')
 
     def test_categories_dirty(self):
-        self.assertEqual(test_categories_dirty(publisher_path),'{"Result": "Metadata Error", "DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"]]}')
+        self.assertEqual(test_categories_dirty(publisher_path),'{"Result": "Metadata Error", "DataErrors": [["AirlineId", "DataTypes", "Int", "KeyError(\'DataTypes\',)"]]}')
 #        '{"DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"], ["AirlineName", "DataType", "Strings", "No Match"]], "Result": "Metadata Error"}')
 
 
