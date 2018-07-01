@@ -76,24 +76,29 @@ def categories():
     data=request.get_json()
     print(data)
 
-    for key in ['CategoryName', 'DataStructure']:
-        if key not in data.keys():
-            return json.dumps({'Result':'No %s' % key})
+    # for key in ['CategoryName', 'DataStructure']:
+    #     if key not in data.keys():
+    #         return json.dumps({'Result':'No %s' % key})
 
-    #TEST 4 : Test Metadata
-    test_data=validate_category(data['DataStructure'])
-    if test_data != []:
-        return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
+    try:
+        #TEST 4 : Test Metadata
+        test_data=validate_category(data['DataStructure'])
+        if test_data != []:
+            return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
 
-    #TEST 5 : Create Data
-    rs=create_category(db, data['CategoryName'],data)
-#        rs=create_category(db, catname,json_data)
-    if rs=='already exists':
-        return json.dumps({'Result':'CategoryName already exists'})
-    elif rs=='success':
-        return json.dumps({'Result':'Category Created'})
-    else:
-        return json.dumps({'Result':'Category Not Created'})
+        #TEST 5 : Create Data
+        rs=create_category(db, data['CategoryName'],data)
+    #        rs=create_category(db, catname,json_data)
+        if rs=='already exists':
+            return json.dumps({'Result':'CategoryName already exists'})
+        elif rs=='success':
+            return json.dumps({'Result':'Category Created'})
+        else:
+            return json.dumps({'Result':'Category Not Created'})
+
+    except Exception as e:
+        key = str(e)
+        return json.dumps({'Result': 'No %s' % key})
 
     return json.dumps(['unexpected end'])
 

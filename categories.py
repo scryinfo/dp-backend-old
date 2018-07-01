@@ -32,9 +32,7 @@ def create_category(db,catname,meta):
 # This function is used to verify Metadata structure (input from categories)
 def validate_category(ds, master=None):
     print("TEST METADATA")
-    print(ds)
     testResult=[]
-    res=''
     for d in ds:
         testResult += Column(d, master).validate_column()
     return testResult
