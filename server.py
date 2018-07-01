@@ -92,9 +92,10 @@ def categories():
         else:
             return json.dumps({'Result':'Category Not Created'})
 
+    except KeyError as e:
+        return json.dumps({'Result': 'No %s' % str(e)})
     except Exception as e:
-        key = str(e)
-        return json.dumps({'Result': 'No %s' % key})
+        return json.dumps({'Result': str(e)})
 
     return json.dumps(['unexpected end'])
 
