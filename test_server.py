@@ -63,11 +63,7 @@ def test_categories(path,jwt_server_path,upayload):
     }
 
     r = requests.post(path+'categories', json = payload,headers=headers)
-    result=r.text
-    print(result)
-    return result
-
-
+    return r.text
 
 
 def test_jwt_scry(jwt_server_path,payload):
@@ -113,9 +109,8 @@ def test_getcategories(path,jwt_server_path,payload):
 
     r = requests.post(path+'getcategories', headers=headers)
 
-    result=r.text
-    print(result)
-    return result
+    return r.text
+
 
 publisher_path='http://localhost:2222/'
 scry_path='http://localhost:1234/'
@@ -171,7 +166,7 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(test_no_datastructure(publisher_path),'{"Result": "No Data Structure"}')
 
     def test_categories_dirty(self):
-        self.assertEqual(test_categories_dirty(publisher_path),'{"DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"]], "Result": "Metadata Error"}')
+        self.assertEqual(test_categories_dirty(publisher_path),'{"Result": "Metadata Error", "DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"]]}')
 #        '{"DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"], ["AirlineName", "DataType", "Strings", "No Match"]], "Result": "Metadata Error"}')
 
 
@@ -266,7 +261,7 @@ class PublisherTest(unittest.TestCase):
 
     def test_Duplicates_in_Unique_Column(self):
         warnings.simplefilter("ignore")
-        print(publish_data(data_path+"airlines_duplicate.dat",listing_path+"Airlines_listing.json"))
+        publish_data(data_path+"airlines_duplicate.dat",listing_path+"Airlines_listing.json")
         self.assertEqual(publish_data(data_path+"airlines_duplicate.dat",listing_path+"Airlines_listing.json"),"[\"Test Failed\", {\"DataType\": [], \"FieldLength\": [], \"ForeignDataHash\": [], \"IsNull\": [], \"IsPrimaryKey\": [], \"IsUnique\": [[\"AirlineId\", [\"2\", 2], [\"3\", 2]]]}]")
 
     def test_Float_and_String_in_int_Column(self):
@@ -334,7 +329,8 @@ class SearchKeywordsTest(unittest.TestCase):
         db.execute_sql("""DELETE FROM scry2.listing WHERE "categoryId"={};""".format(cat_id))
         db.execute_sql("""DELETE FROM scry2.categories WHERE name='["Search Keywords"]';""")
 
-    def test_search_keywords(self):
-        print(search_keywords('blabla','["category","keywords"]'))
-
-        self.assertEqual(test_categories(publisher_path,scry_path,userpayload),'{"Result": "Category Created"}')
+    #WIP: "Charles" <chuck>
+    # def test_search_keywords(self):
+    #     print(search_keywords('blabla','["category","keywords"]'))
+    #
+    #     self.assertEqual(test_categories(publisher_path,scry_path,userpayload),'{"Result": "Category Created"}')

@@ -56,7 +56,7 @@ def publish_data(data_file,listing_file,publisher_path=publisher_path,scry_path=
     print(result)
 
 
-meta_path='/home/chuck/scry3/publisher/demo/metadata/'
+meta_path='./demo/metadata/'
 meta_files=os.listdir(meta_path)
 
 # CREATE CATEGORIES
@@ -67,10 +67,10 @@ for files in meta_files:
 
 #print(get_categories())
 
-data_path='/home/chuck/scry3/publisher/demo/metadata/'
+data_path='./demo/metadata/'
 data_files=os.listdir(meta_path)
 
-listing_path='/home/chuck/scry3/publisher/demo/listing_info/'
+listing_path='./demo/listing_info/'
 path_files=os.listdir(listing_path)
 
 # PUBLISH

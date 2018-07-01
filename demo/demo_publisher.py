@@ -108,17 +108,17 @@ def listing_category_id(cat_id,publisher_path=publisher_path,scry_path=scry_path
 
 # CREATE CATEGORIES
 
-meta_path='/home/chuck/scry3/publisher/demo/metadata/'
+meta_path='./demo/metadata/'
 meta_files=os.listdir(meta_path)
 for files in meta_files:
     metadata=json.load(open(meta_path+files))
     create_category(metadata)
 
 
-data_path='/home/chuck/scry3/publisher/demo/data/'
-listing_path='/home/chuck/scry3/publisher/demo/listing_info/'
+data_path='./demo/data/'
+listing_path='./demo/listing_info/'
 
-with open('./demo.json') as jsonfile:
+with open('./demo/demo.json') as jsonfile:
     test_scenario=json.load(jsonfile)
 
 for i in test_scenario:
