@@ -1,9 +1,11 @@
-import requests
 import json
+import unittest
+import warnings
+
+from api import api_categories, ScryApiException, ScryApi, api_protected, api_publisher, api_search, api_getcategories, \
+    api_test_json
 from categories import create_category
 from model import db, Categories
-import warnings
-import unittest
 
 meta_path='./demo/metadata/'
 
@@ -16,8 +18,7 @@ def test_no_categories():
             {"AirlineId": {"DataType":"Int", "IsUnique":"true","IsPrimaryKey":"true"}}
             ]
     }
-    r = requests.post(publisher_url+'categories', json = payload)
-    return r.text
+    return api_categories(payload, headers=None)
 
 # "DataStructure" missing. Here written with an "s" --> "DataStructures"
 def test_no_datastructure():
@@ -28,8 +29,7 @@ def test_no_datastructure():
             {"AirlineId": {"DataType":"Int", "IsUnique":"true","IsPrimaryKey":"true"}}
             ]
     }
-    r = requests.post(publisher_url+'categories', json = payload)
-    return r.text
+    return api_categories(payload, headers=None)
 
 # "DataType" written with an "s" --> "DataTypes"
 def test_categories_dirty():
@@ -40,12 +40,11 @@ def test_categories_dirty():
             {"AirlineId": {"DataTypes":"Int", "IsUnique":"true","IsPrimaryKey":"true"}},
             ]
     }
-    r = requests.post(publisher_url+'categories', json = payload)
-    return r.text
+    return api_categories(payload=payload, headers=None)
 
 
 def test_categories(upayload):
-    jwtToken=api_login(upayload)
+    jwtToken= ScryApi().login(**upayload)
     headers = {"Authorization": "JWT "+jwtToken}
     payload={
     "CategoryName": ["Aviation6", "Commercial Flights", "Airport Info"],
@@ -61,14 +60,7 @@ def test_categories(upayload):
             {"Active": {"DataType":"String"}}
             ]
     }
-
-    r = requests.post(publisher_url+'categories', json=payload, headers=headers)
-    return r.text
-
-
-def api_login(payload):
-    r = requests.post(scry_url+'login', json=payload)
-    return json.loads(r.text)['token']
+    return api_categories(payload, headers)
 
 
 def test_json():
@@ -76,47 +68,39 @@ def test_json():
     payload=json.dumps(payload)
     print(payload)
     print(type(payload))
-    r = requests.post(publisher_url+'test_json', json = payload)
-    print(r.text)
+    print(api_test_json(payload))
 
 
 def test_getcategories(payload):
-    jwtToken=api_login(payload)
+    jwtToken= ScryApi().login(**payload)
     headers = {"Authorization": "JWT "+jwtToken}
-
-    r = requests.post(publisher_url+'getcategories', headers=headers)
-
-    return r.text
+    return api_getcategories(headers)
 
 
-publisher_url= 'http://localhost:2222/'
-scry_url= 'http://localhost:1234/'
 userpayload={'username':'22', 'password':'22'}
 #scry_path='https://dev.scry.info:443/scry2/'
 #publisher_path='https://dev.scry.info:443/meta/'
 
 
-
 class JWTTest(unittest.TestCase):
     def test_correct_authentication(self):
-        api_login(userpayload)
+        ScryApi().login(**userpayload)
 
     def test_wrong_authentication(self):
         with self.assertRaises(Exception):
-            api_login({'username': '22', 'password': '223'})
+            ScryApi().login(username='22', password='223')
 
     def test_aut1(self):
-        jwtToken = api_login(userpayload)
+        jwtToken = ScryApi().login(**userpayload)
         headers = {"Authorization": "JWT " + jwtToken}
-        r = requests.get(publisher_url + 'protected', headers=headers)
-
-        self.assertEqual(r.text, '1', 'Could not access /protected page')
+        with self.assertRaises(ScryApiException):
+            r = api_protected(headers)
 
     def test_aut2(self):
-        jwtToken = api_login(userpayload)
+        jwtToken = ScryApi().login(**userpayload)
         jwtToken = jwtToken + 'a'
-        r = requests.get(publisher_url+ 'protected', headers={"Authorization": "JWT " + jwtToken})
-        self.assertEqual(r.status_code, 401, 'fail to reject invalid JWT token')
+        with self.assertRaises(ScryApiException):
+           api_protected({"Authorization": "JWT " + jwtToken})
 
 
 class CategoryTest(unittest.TestCase):
@@ -147,78 +131,66 @@ class CategoryTest(unittest.TestCase):
 
 
 def publish_data(data_file_path, listing_file_path, userpayload=userpayload):
-    jwtToken=api_login(userpayload)
+    jwtToken= ScryApi().login(**userpayload)
     headers = {"Authorization": "JWT "+jwtToken}
 
     f1=open(data_file_path,'rb')
     f2= open(listing_file_path)
     files = {'data': f1,'listing_info':f2}
 
-    r = requests.post(publisher_url+'publisher',files=files,headers=headers)
-
-    return r.text
+    return api_publisher(files, headers)
 
 
 def publish_data_no_data(data_file,listing_file):
-    jwtToken=api_login(userpayload)
+    jwtToken= ScryApi().login(**userpayload)
     headers = {"Authorization": "JWT "+jwtToken}
 
     f1=open(data_file,'rb')
     f2= open(listing_file)
     files ={'listing_info':f2}
-
-    r = requests.post(publisher_url+'publisher', files=files, headers=headers)
-    result=r.text
-    return result
+    return api_publisher(files, headers)
 
 
 def publish_data_no_JWT(data_file, listing_file, userpayload=userpayload):
-    jwtToken=api_login(userpayload)
-    headers = {"Authorization": "JWT "+jwtToken}
-
-
     f1=open(data_file,'rb')
     f2= open(listing_file)
     files ={'listing_info':f2}
 
-    r = requests.post(publisher_url+'publisher', files=files)
-    return r.text
+    return api_publisher(files, headers=None)
 
 
 def publish_data_wrong_JWT(data_file, listing_file, userpayload=userpayload):
-    jwtToken=api_login(userpayload)
+    jwtToken= ScryApi().login(**userpayload)
+    jwtToken = jwtToken + 'a'
+    headers = {"Authorization": "JWT " + jwtToken}
 
     f1=open(data_file,'rb')
     f2= open(listing_file)
     files ={'listing_info':f2}
 
-    r = requests.post(publisher_url+'publisher', files=files)
-    return r.text
+    return api_publisher(files, headers)
 
 
 def publish_data_no_listing(data_file, listing_file, userpayload=userpayload):
-    jwtToken=api_login(userpayload)
+    jwtToken= ScryApi().login(**userpayload)
     headers = {"Authorization": "JWT "+jwtToken}
 
     f1=open(data_file,'rb')
     f2= open(listing_file)
     files ={'data': f1}
 
-    r = requests.post(publisher_url+'publisher', files=files, headers=headers)
-    result=r.text
-    return result
+    return api_publisher(files, headers)
 
 
 def search_keywords(keywords, searchtype, userpayload=userpayload):
-    jwtToken=api_login(userpayload)
+    jwtToken= ScryApi().login(**userpayload)
     headers = {"Authorization": "JWT "+jwtToken}
 
     payload = {
         'keywords': keywords,
         'searchtype' : searchtype
         }
-    r = requests.get(publisher_url+'search_keywords', params=payload, headers=headers)
-    return r.text
+    return api_search(payload, headers)
 
 
 data_path='./demo/data/'
@@ -229,7 +201,8 @@ class PublisherTest(unittest.TestCase):
 
     def test_publish_with_no_JWT(self):
         warnings.simplefilter("ignore")
-        self.assertEqual(json.loads(publish_data_no_JWT(data_path+"airlines_null.dat",listing_path+"Airlines_listing.json")),{'description': 'Request does not contain an access token', 'error': 'Authorization Required', 'status_code': 401}        )
+        with self.assertRaises(ScryApiException):
+            publish_data_no_JWT(data_path+"airlines_null.dat",listing_path+"Airlines_listing.json")
 
     def test_Null_in_NotNull_Column(self):
         warnings.simplefilter("ignore")
@@ -254,11 +227,13 @@ class PublisherTest(unittest.TestCase):
 
     def test_data_file_missing(self):
         warnings.simplefilter("ignore")
-        self.assertEqual(json.loads(publish_data_no_data(data_path+"schedule.csv",listing_path+"Schedule_listing.json")),{'status': 'error', 'message': 'Data missing'})
+        with self.assertRaises(ScryApiException):
+            publish_data_no_data(data_path + "schedule.csv", listing_path + "Schedule_listing.json")
 
     def test_data_listing_missing(self):
         warnings.simplefilter("ignore")
-        self.assertEqual(json.loads(publish_data_no_listing(data_path+"schedule.csv",listing_path+"Schedule_listing.json")),{'message': 'Listing missing', 'status': 'error'})
+        with self.assertRaises(ScryApiException):
+            json.loads(publish_data_no_listing(data_path+"schedule.csv",listing_path+"Schedule_listing.json"))
 
     def test_insert_schedule_data_successfully(self):
         warnings.simplefilter("ignore")
@@ -275,7 +250,7 @@ class SearchKeywordsTest(unittest.TestCase):
 
     def setUp(self):
         userpayload={'username':'22','password':'22'}
-        jwtToken=api_login(userpayload)
+        jwtToken= ScryApi().login(**userpayload)
         headers = {"Authorization": "JWT "+jwtToken}
 
         #Create category
@@ -287,7 +262,7 @@ class SearchKeywordsTest(unittest.TestCase):
         f1=open(data_path+"schedule.csv",'rb')
         f2= json.loads='{"category_name":["Search Keywords"],"price":1000,"filename":"Airlines_float.csv","keywords":"blabla"}'
         files = {'data': f1,'listing_info':f2}
-        requests.post(publisher_url + 'publisher', files=files, headers=headers)
+        api_publisher(files=files, headers=headers)
 
     def tearDown(self):
         cat=Categories.get(Categories.name=='["Search Keywords"]')
