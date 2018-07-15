@@ -2,6 +2,8 @@ import json
 import requests
 
 
+#scry_path='https://dev.scry.info:443/scry2/'
+#publisher_path='https://dev.scry.info:443/meta/'
 publisher_url = 'http://localhost:2222/'
 scry_url = 'http://localhost:1234/'
 
@@ -18,18 +20,20 @@ class ScryApi(object):
     paths = dict(
         login=scry_url,
         protected=publisher_url,
+        publisher=publisher_url,
+        categories=publisher_url,
     )
 
     def login(self, username, password):
-        response = self._request('login', dict(username=username, password=password))
+        response = self._post('login', json=dict(username=username, password=password))
         self.jwt_token = response['token']
         return self.jwt_token
 
     def get_url(self, path):
         return self.paths[path] + path
 
-    def _request(self, path, payload):
-        r = requests.post(self.get_url(path), json=payload, headers=self.get_headers())
+    def _post(self, path, **payload):
+        r = requests.post(self.get_url(path), headers=self.get_headers(), **payload)
         if r.status_code > 400:
             try:
                 response = json.loads(r.text)
@@ -40,30 +44,17 @@ class ScryApi(object):
         return json.loads(r.text)
 
     def get_headers(self):
-        if getattr(self,'jwt_token', None) is not None:
+        if getattr(self, 'jwt_token', None) is not None:
             return {"Authorization": "JWT " + self.jwt_token}
 
     def protected(self):
-        return self._request('protected', None)
+        return self._post('protected')
 
     def publisher(self, files):
-        r = requests.post(publisher_url + 'publisher', files=files, headers=self.get_headers())
-        if r.status_code > 400:
-            raise ScryApiException(r.status_code, json.loads(r.text))
-        return json.loads(r.text)
+        return self._post('publisher', files=files)
 
     def search(self, payload):
-        r = requests.get(publisher_url + 'search_keywords', params=payload, headers=self.get_headers())
-        return json.loads(r.text)
-
-    def getcategories(self):
-        r = requests.post(publisher_url + 'getcategories', headers=self.get_headers())
-        return json.loads(r.text)
-
-    def test_json(self, payload):
-        r = requests.post(publisher_url + 'test_json', json=payload, headers=self.get_headers())
-        return json.loads(r.text)
+        return self.get('search_keywords', params=payload)
 
     def categories(self, payload):
-        r = requests.post(publisher_url + 'categories', json=payload, headers=self.get_headers())
-        return json.loads(r.text)
+        return self._post('categories', json=payload)

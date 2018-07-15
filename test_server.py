@@ -8,26 +8,10 @@ from categories import create_category
 from model import db, Categories
 
 
-meta_path='./demo/metadata/'
+meta_path = './demo/metadata/'
 
 
-def test_json():
-    payload={"CategoryNames": ["Aviation","Commercial Flights","Airport Info"],"Test":True}
-    payload=json.dumps(payload)
-    print(payload)
-    print(type(payload))
-    print(ScryApi().test_json(payload))
-
-
-def test_getcategories(payload):
-    api = ScryApi()
-    api.login(**payload)
-    return api.getcategories()
-
-
-test_credentials={'username': '22', 'password': '22'}
-#scry_path='https://dev.scry.info:443/scry2/'
-#publisher_path='https://dev.scry.info:443/meta/'
+test_credentials = {'username': '22', 'password': '22'}
 
 
 class JWTTest(unittest.TestCase):
@@ -89,8 +73,7 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(response, {"Result": "CategoryName already exists"})
 
     def test_create_categories(self):
-        payload = {
-            # "CategoryName" missing. Here written with an "s" --> "CategoryNames"
+        payload = {  # "CategoryName" missing. Here written with an "s" --> "CategoryNames"
             "CategoryNames": ["Aviation", "Commercial Flights", "Airport Info"],
             "DataStructure":
                 [
@@ -102,7 +85,7 @@ class CategoryTest(unittest.TestCase):
 
 
     def test_no_datastructure(self):
-        payload = { # "DataStructure" missing. Here written with an "s" --> "DataStructures"
+        payload = {  # "DataStructure" missing. Here written with an "s" --> "DataStructures"
             "CategoryName": ["Aviation", "Commercial Flights", "Airport Info"],
             "DataStructures":
                 [
