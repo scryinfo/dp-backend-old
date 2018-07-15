@@ -7,60 +7,8 @@ from api import ScryApiException, ScryApi
 from categories import create_category
 from model import db, Categories
 
+
 meta_path='./demo/metadata/'
-
-# "CategoryName" missing. Here written with an "s" --> "CategoryNames"
-def test_no_categories():
-    payload={
-    "CategoryNames": ["Aviation","Commercial Flights","Airport Info"],
-    "DataStructure":
-            [
-            {"AirlineId": {"DataType":"Int", "IsUnique":"true","IsPrimaryKey":"true"}}
-            ]
-    }
-    return ScryApi().categories(payload)
-
-# "DataStructure" missing. Here written with an "s" --> "DataStructures"
-def test_no_datastructure():
-    payload={
-    "CategoryName": ["Aviation","Commercial Flights","Airport Info"],
-    "DataStructures":
-            [
-            {"AirlineId": {"DataType":"Int", "IsUnique":"true","IsPrimaryKey":"true"}}
-            ]
-    }
-    return ScryApi().categories(payload)
-
-# "DataType" written with an "s" --> "DataTypes"
-def test_categories_dirty():
-    payload={
-    "CategoryName": ["Aviation","Commercial Flights","Airport Info"],
-    "DataStructure":
-            [
-            {"AirlineId": {"DataTypes":"Int", "IsUnique":"true","IsPrimaryKey":"true"}},
-            ]
-    }
-    return ScryApi().categories(payload=payload)
-
-
-def test_categories(upayload):
-    api = ScryApi()
-    api.login(**upayload)
-    payload={
-    "CategoryName": ["Aviation6", "Commercial Flights", "Airport Info"],
-    "DataStructure":
-            [
-            {"AirlineId": {"DataType":"Int", "IsUnique":"true","IsPrimaryKey":"true"}},
-            {"AirlineName": {"DataType":"String", "IsUnique":"true"}},
-            {"ANA": {"DataType":"String", "IsUnique":"true"}},
-            {"IATA": {"DataType":"String", "IsUnique":"true", "IsNull":"true"}},
-            {"IACAO": {"DataType":"String", "IsUnique":"true", "IsNull":"true"}},
-            {"Callsign":{"DataType":"String", "IsUnique":"true"}},
-            {"Country": {"DataType":"String"}},
-            {"Active": {"DataType":"String"}}
-            ]
-    }
-    return api.categories(payload)
 
 
 def test_json():
@@ -114,22 +62,67 @@ class CategoryTest(unittest.TestCase):
         db.execute_sql("""DELETE FROM scry2.categories where name='["Aviation6", "Commercial Flights", "Airport Info"]';""")
 
     def test_create_new_category(self):
-        self.assertEqual(test_categories(test_credentials), {"Result": "Category Created"})
+        api = ScryApi()
+        api.login(**test_credentials)
+        payload = {
+            "CategoryName": ["Aviation6", "Commercial Flights", "Airport Info"],
+            "DataStructure":
+                [
+                    {"AirlineId": {"DataType": "Int", "IsUnique": "true", "IsPrimaryKey": "true"}},
+                    {"AirlineName": {"DataType": "String", "IsUnique": "true"}},
+                    {"ANA": {"DataType": "String", "IsUnique": "true"}},
+                    {"IATA": {"DataType": "String", "IsUnique": "true", "IsNull": "true"}},
+                    {"IACAO": {"DataType": "String", "IsUnique": "true", "IsNull": "true"}},
+                    {"Callsign": {"DataType": "String", "IsUnique": "true"}},
+                    {"Country": {"DataType": "String"}},
+                    {"Active": {"DataType": "String"}}
+                ]
+        }
+        response = {"Result": "Category Created"}
+        self.assertEqual(api.categories(payload=payload), response)
+        return api, payload
 
     def test_category_exists(self):
-        test_categories(test_credentials)
-        self.assertEqual(test_categories(test_credentials), {"Result": "CategoryName already exists"})
+        api, payload = self.test_create_new_category()
+        # TRICK: upload the same category again.
+        response = api.categories(payload=payload)
+        self.assertEqual(response, {"Result": "CategoryName already exists"})
 
     def test_create_categories(self):
-        self.assertEqual(test_no_categories(), {"Result": "No 'CategoryName'"})
+        payload = {
+            # "CategoryName" missing. Here written with an "s" --> "CategoryNames"
+            "CategoryNames": ["Aviation", "Commercial Flights", "Airport Info"],
+            "DataStructure":
+                [
+                    {"AirlineId": {"DataType": "Int", "IsUnique": "true", "IsPrimaryKey": "true"}}
+                ]
+        }
+        response = {"Result": "No 'CategoryName'"}
+        self.assertEqual(ScryApi().categories(payload=payload), response)
+
 
     def test_no_datastructure(self):
-        self.assertEqual(test_no_datastructure(), {"Result": "No 'DataStructure'"})
+        payload = { # "DataStructure" missing. Here written with an "s" --> "DataStructures"
+            "CategoryName": ["Aviation", "Commercial Flights", "Airport Info"],
+            "DataStructures":
+                [
+                    {"AirlineId": {"DataType": "Int", "IsUnique": "true", "IsPrimaryKey": "true"}}
+                ]
+        }
+        response = {"Result": "No 'DataStructure'"}
+        self.assertEqual(ScryApi().categories(payload=payload), response)
 
     def test_categories_dirty(self):
-        response = test_categories_dirty()
-        self.assertEqual(response,
-                         {"Result": "Metadata Error", "DataErrors": [["AirlineId", "DataTypes", "Int", "KeyError('DataTypes',)"]]})
+        payload = {
+            "CategoryName": ["Aviation", "Commercial Flights", "Airport Info"],
+            "DataStructure":
+                [  # "DataType" written with an "s" --> "DataTypes"
+                    {"AirlineId": {"DataTypes": "Int", "IsUnique": "true", "IsPrimaryKey": "true"}},
+                ]
+        }
+        response = {"Result": "Metadata Error",
+                  "DataErrors": [["AirlineId", "DataTypes", "Int", "KeyError('DataTypes',)"]]}
+        self.assertEqual(ScryApi().categories(payload=payload), response)
 
 
 def search_keywords(keywords, searchtype, userpayload=test_credentials):
