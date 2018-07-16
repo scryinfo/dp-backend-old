@@ -17,11 +17,14 @@ class ScryApiException(Exception):
 
 class ScryApi(object):
 
+    # TRICK: mapping endpoint to which backend is serving it.
     paths = dict(
         login=scry_url,
         protected=publisher_url,
         publisher=publisher_url,
         categories=publisher_url,
+        listing_by_categories=publisher_url,
+        listing=publisher_url
     )
 
     def login(self, username, password):
@@ -43,6 +46,17 @@ class ScryApi(object):
             raise ScryApiException(r.status_code, response)
         return json.loads(r.text)
 
+    def get(self, path, **payload):
+        r = requests.get(self.get_url(path), payload, headers=self.get_headers())
+        if r.status_code > 400:
+            try:
+                response = json.loads(r.text)
+            except:
+                response = r.text
+                print('failed to decode response as JSON: "%s"' % response)
+            raise ScryApiException(r.status_code, response)
+        return json.loads(r.text)
+
     def get_headers(self):
         if getattr(self, 'jwt_token', None) is not None:
             return {"Authorization": "JWT " + self.jwt_token}
@@ -53,8 +67,19 @@ class ScryApi(object):
     def publisher(self, files):
         return self._post('publisher', files=files)
 
+    def from_filenames_to_publisher_payload(self, data=None, listing_info=None):
+        payload = {}
+        if data:
+            payload['data'] = open(self.data_path + data, 'rb')
+        if listing_info:
+            payload['listing_info'] = open(self.listing_path + listing_info)
+        return payload
+
     def search(self, payload):
         return self.get('search_keywords', params=payload)
 
     def categories(self, payload):
         return self._post('categories', json=payload)
+
+    def listing_by_categories(self, payload):
+        return self.get('listing_by_categories', params=payload)

@@ -73,7 +73,7 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(response, {"Result": "CategoryName already exists"})
 
     def test_create_categories(self):
-        payload = {  # "CategoryName" missing. Here written with an "s" --> "CategoryNames"
+        payload = {  # "CategoryName" key missing. Here written with an "s" --> "CategoryNames"
             "CategoryNames": ["Aviation", "Commercial Flights", "Airport Info"],
             "DataStructure":
                 [
@@ -85,7 +85,7 @@ class CategoryTest(unittest.TestCase):
 
 
     def test_no_datastructure(self):
-        payload = {  # "DataStructure" missing. Here written with an "s" --> "DataStructures"
+        payload = {  # "DataStructure" key missing. Here written with an "s" --> "DataStructures"
             "CategoryName": ["Aviation", "Commercial Flights", "Airport Info"],
             "DataStructures":
                 [
@@ -118,40 +118,37 @@ def search_keywords(keywords, searchtype, userpayload=test_credentials):
     return api.search(payload)
 
 
-data_path='./demo/data/'
-listing_path='./demo/listing_info/'
-
-
 class PublisherTest(unittest.TestCase):
 
-    def publish_data(self, data_file=None, listing_file=None):
+    def make_api(self):
         api = ScryApi()
+        api.data_path = './demo/data/'
+        api.listing_path = './demo/listing_info/'
+        return api
+
+    def publish_data(self, data_file=None, listing_file=None):
+        api = self.make_api()
         api.login(**test_credentials)
-        payload = {}
-        if data_file:
-            payload['data'] = open(data_path + data_file, 'rb')
-        if listing_file:
-            payload['listing_info'] = open(listing_path + listing_file)
+        payload = api.from_filenames_to_publisher_payload(data=data_file, listing_info=listing_file)
         return api.publisher(payload)
 
-    def test_publish_with_no_JWT(self):
+    def test_publish_with_no_jwt(self):
         warnings.simplefilter("ignore")
-        api = ScryApi()
-        data_file = (open(data_path + "airlines_null.dat", 'rb'))
-        listing_file = (open(listing_path + "Airlines_listing.json"))
+        api = self.make_api()
         with self.assertRaises(ScryApiException):
-            return api.publisher({'data': data_file, 'listing_info': listing_file})
+            return api.publisher(self.make_publisher_default_payload(api))
 
-    def test_publish_data_with_wrong_JWT(self):
-        api = ScryApi()
+    def make_publisher_default_payload(self, api):
+        return api.from_filenames_to_publisher_payload(data="airlines_null.dat", listing_info="Airlines_listing.json")
+
+    def test_publish_data_with_wrong_jwt(self):
+        api = self.make_api()
         api.login(**test_credentials)
         api.jwt_token += 'a'
-        data_file = (open(data_path + "airlines_null.dat", 'rb'))
-        listing_file = (open(listing_path + "Airlines_listing.json"))
         with self.assertRaises(ScryApiException):
-            return api.publisher({'data': data_file, 'listing_info': listing_file})
+            return api.publisher(self.make_publisher_default_payload(api))
 
-    def test_Null_in_NotNull_Column(self):
+    def test_null_in_not_null_column(self):
         warnings.simplefilter("ignore")
         self.assertEqual(
             self.publish_data(data_file="airlines_null.dat", listing_file="Airlines_listing.json"),
