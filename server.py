@@ -129,8 +129,7 @@ def  publisher():
         return make_response(jsonify({'status':'error','message':'Listing missing'}),422)
 
     print('GET LISTING INFO')
-    f=listing_info.read()
-    f=f.decode("utf-8")
+    f = listing_info.read().decode("utf-8")
     listing_info=json.loads(f)
 
     catname=json.dumps(listing_info['category_name'])

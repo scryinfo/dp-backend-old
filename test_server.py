@@ -31,7 +31,7 @@ class JWTTest(unittest.TestCase):
     def test_aut2(self):
         api = ScryApi()
         api.login(**test_credentials)
-        api.jwt_token += 'a'
+        api.jwt_token += 'a'  # TRICK: corrupt jwt_token value.
         with self.assertRaises(ScryApiException):
            api.protected()
 
