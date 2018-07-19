@@ -66,6 +66,8 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(api.categories(payload=payload), response)
         return api, payload
 
+
+
     def test_category_exists(self):
         api, payload = self.test_create_new_category()
         # TRICK: upload the same category again.
@@ -103,10 +105,9 @@ class CategoryTest(unittest.TestCase):
                     {"AirlineId": {"DataTypes": "Int", "IsUnique": "true", "IsPrimaryKey": "true"}},
                 ]
         }
-        response = {"Result": "Metadata Error",
-                 "DataErrors": [["AirlineId", "DataTypes", "Int", "KeyError('DataTypes')"]]}
 
-        self.assertEqual(ScryApi().categories(payload=payload), response)
+        self.assertEqual(ScryApi().categories(payload=payload),  {'DataErrors': [['AirlineId', 'DataTypes', 'Int', "KeyError('DataTypes',)"]], 'Result': 'Metadata Error'}
+)
 
 
 def search_keywords(keywords, searchtype, userpayload=test_credentials):
