@@ -105,6 +105,7 @@ class CategoryTest(unittest.TestCase):
         }
         response = {"Result": "Metadata Error",
                  "DataErrors": [["AirlineId", "DataTypes", "Int", "KeyError('DataTypes')"]]}
+
         self.assertEqual(ScryApi().categories(payload=payload), response)
 
 
@@ -150,27 +151,51 @@ class PublisherTest(unittest.TestCase):
 
     def test_null_in_not_null_column(self):
         warnings.simplefilter("ignore")
+
+        with self.assertRaises(ScryApiException) as error:
+            self.publish_data(data_file="airlines_null.dat", listing_file="Airlines_listing.json")
+
+
         self.assertEqual(
-            self.publish_data(data_file="airlines_null.dat", listing_file="Airlines_listing.json"),
-            ["Test Failed", {"DataType": [], "FieldLength": [], "ForeignDataHash": [], "IsNull": [["IATA", ["2", None]], ["ICAO", ["0", None], ["1", None]], ["Callsign", ["1", None]], ["Country", ["1", None]]], "IsPrimaryKey": [], "IsUnique": []}])
+                error.exception.response['error'],
+                {'IsUnique': [], 'IsNull': [['IATA', ['2', None]], ['ICAO', ['0', None], ['1', None]], ['Callsign', ['1', None]], ['Country', ['1', None]]], 'DataType': [], 'FieldLength': [], 'IsPrimaryKey': [], 'ForeignDataHash': []}
+            )
+
 
     def test_Duplicates_in_Unique_Column(self):
         warnings.simplefilter("ignore")
-        self.assertEqual(self.publish_data("airlines_duplicate.dat", "Airlines_listing.json"),
-                         ["Test Failed", {"DataType": [], "FieldLength": [], "ForeignDataHash": [], "IsNull": [], "IsPrimaryKey": [], "IsUnique": [["AirlineId", ["2", 2], ["3", 2]]]}])
 
+        with self.assertRaises(ScryApiException) as error:
+            self.publish_data("airlines_duplicate.dat", "Airlines_listing.json")
+
+        self.assertEqual(
+            {'FieldLength': [], 'IsPrimaryKey': [], 'IsNull': [['AirlineId', ['2', 2], ['3', 2]]], 'IsUnique': [['AirlineId', ['2', 2], ['3', 2]]], 'ForeignDataHash': [], 'DataType': []}
+
+            ,
+            error.exception.response['error']
+        )
 
     def test_Float_and_String_in_int_Column(self):
         warnings.simplefilter("ignore")
+        with self.assertRaises(ScryApiException) as error:
+            self.publish_data(data_file="airlines_int.dat", listing_file="Airlines_listing.json")
+
         self.assertEqual(
-            self.publish_data(data_file="airlines_int.dat", listing_file="Airlines_listing.json"),
-            ["Test Failed", {"DataType": [["AirlineId", ["1", "1.1"], ["2", "2a"]]], "FieldLength": [], "ForeignDataHash": [], "IsNull": [], "IsPrimaryKey": [], "IsUnique": []}])
+        error.exception.response['error']
+        ,
+        {'ForeignDataHash': [], 'IsNull': [], 'IsUnique': [], 'FieldLength': [], 'DataType': [['AirlineId', ['1', '1.1'], ['2', '2a']]], 'IsPrimaryKey': []}
+        )
 
     def test_String_in_float_Column(self):
         warnings.simplefilter("ignore")
+
+        with self.assertRaises(ScryApiException) as error:
+            self.publish_data(data_file="airlines_float.dat", listing_file="Airlines_listing_float.json")
+
         self.assertEqual(
-            self.publish_data(data_file="airlines_float.dat", listing_file="Airlines_listing_float.json"),
-            ["Test Failed", {"DataType": [["AirlineId", ["2", "2a"]]], "FieldLength": [], "ForeignDataHash": [], "IsNull": [], "IsPrimaryKey": [], "IsUnique": []}])
+                error.exception.response['error'],
+                {'FieldLength': [], 'IsUnique': [], 'IsPrimaryKey': [], 'ForeignDataHash': [], 'DataType': [['AirlineId', ['2', '2a']]], 'IsNull': []}
+            )
 
     def test_insert_schedule_data_successfully(self):
         warnings.simplefilter("ignore")
@@ -191,7 +216,7 @@ class PublisherTest(unittest.TestCase):
     def test_insert_schedule_data_successfully(self):
         warnings.simplefilter("ignore")
         self.assertEqual(self.publish_data("schedule.csv", "Schedule_listing.json"),
-                         "Success")
+                         {'message': 'Success'})
 
 
 if __name__ == '__main__':
