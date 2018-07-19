@@ -122,11 +122,11 @@ def  publisher():
     try:
         data = request.files['data']
     except KeyError:
-        return make_response(jsonify({'status':'error','message':'Data missing'}),422)
+        return make_response(jsonify({'message': 'Data missing'}),422)
     try:
         listing_info=request.files['listing_info']
     except KeyError:
-        return make_response(jsonify({'status':'error','message':'Listing missing'}),422)
+        return make_response(jsonify({'message': 'Listing missing'}),422)
 
     print('GET LISTING INFO')
     f = listing_info.read().decode("utf-8")
@@ -168,7 +168,11 @@ def  publisher():
 
     test_result, test_failed=fullTest (df, meta)
     if test_failed == 1:
-        return str(simplejson.dumps(['Test Failed',test_result], ignore_nan=True, sort_keys=True))
+        return make_response(simplejson.dumps({
+            'message':'test failed',
+            'error': test_result
+            }, ignore_nan=True, sort_keys=True
+            ), 422)
 
 
 
@@ -178,7 +182,7 @@ def  publisher():
 
     print ("DATA PUBLISHED SUCCESSFULLY !!!")
 
-    return str(simplejson.dumps(result, ignore_nan=True)) # Simple json is used to handle Nan values in test result numpy array TestIsNull
+    return make_response(simplejson.dumps({'message': result}, ignore_nan=True), 200) # Simple json is used to handle Nan values in test result numpy array TestIsNull
 
 @app.route('/getcategories',methods=['GET'])
 @jwt_required()
