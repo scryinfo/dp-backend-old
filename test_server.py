@@ -104,7 +104,7 @@ class CategoryTest(unittest.TestCase):
                 ]
         }
         response = {"Result": "Metadata Error",
-                  "DataErrors": [["AirlineId", "DataTypes", "Int", "KeyError('DataTypes',)"]]}
+                 "DataErrors": [["AirlineId", "DataTypes", "Int", "KeyError('DataTypes')"]]}
         self.assertEqual(ScryApi().categories(payload=payload), response)
 
 
