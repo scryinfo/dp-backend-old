@@ -21,7 +21,7 @@ python server.py
 open the front end
 create a user with login=22 password=22
 ```
- python demo/demo_publisher.py
+ python -m demo.demo_publisher
  
  python test server.py
 ```
