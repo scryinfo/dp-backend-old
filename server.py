@@ -40,7 +40,7 @@ UPLOAD_FOLDER = './uploaded/'
 app = Flask(__name__)
 CORS(app)
 
-app.debug = True
+#app.debug = True
 app.config['SECRET_KEY'] = 'secret'
 app.config['JWT_VERIFY_CLAIMS']=['signature', 'exp',  'iat']
 app.config['JWT_REQUIRED_CLAIMS']=['exp',  'iat']
@@ -62,6 +62,12 @@ def server_internal_Error(e):
 @app.errorhandler(400)
 def page_not_found(e):
     return make_response(jsonify(error=400, text=str(e)), 400)
+
+
+@app.errorhandler(500)
+def page_not_found(e):
+    print(e)
+    return make_response(jsonify(error=500, text=str(e)), 500)
 
 
 # FROM Categories.py : uses validate_category and create_category
@@ -120,7 +126,6 @@ def validate_metadata():
 @app.route('/publisher',methods=['POST'])
 @jwt_required()
 def  publisher():
-
 
     f=request.files['listing_info'].read().decode("utf-8")
     listing_info=json.loads(f)

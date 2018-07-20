@@ -259,18 +259,11 @@ def fullTest(df, meta, master=masterMetaData):
 
 
 def getMetadata(category_name=None,file_path=None):
-    if category_name is None:
-        if file_path is None:
-            print("Please provide a file path or category name")
-        else:
-            print("file path :"+file_path)
-    else:
-        #catname='sdsds'
-        try:
-            catdata= Categories.select().where(Categories.name == category_name).get()
-            result=catdata.metadata
-        except:
-            result='Fail'
+    try:
+        catdata= Categories.select().where(Categories.name == category_name).get()
+        result=catdata.metadata
+    except:
+        result='Fail'
     return result
 
 
