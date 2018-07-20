@@ -10,7 +10,7 @@ scry_url = 'http://localhost:1234/'
 
 class ScryApiException(Exception):
     def __init__(self, status_code, response):
-        assert status_code > 400
+        assert status_code >= 400
         super(ScryApiException, self).__init__('HTTP error %d' % status_code)
         self.response = response
 
@@ -37,7 +37,7 @@ class ScryApi(object):
 
     def _post(self, path, **payload):
         r = requests.post(self.get_url(path), headers=self.get_headers(), **payload)
-        if r.status_code > 400:
+        if r.status_code >= 400:
             try:
                 response = json.loads(r.text)
             except:
@@ -48,7 +48,7 @@ class ScryApi(object):
 
     def get(self, path, **payload):
         r = requests.get(self.get_url(path), payload, headers=self.get_headers())
-        if r.status_code > 400:
+        if r.status_code >= 400:
             try:
                 response = json.loads(r.text)
             except:
