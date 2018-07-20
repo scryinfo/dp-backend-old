@@ -122,24 +122,15 @@ def validate_metadata():
 def  publisher():
 
 
-    print(request.files)
-    print('EXTRACT FILES FOM REQUEST')
-
-    data = request.files['data']
     f=request.files['listing_info'].read().decode("utf-8")
     listing_info=json.loads(f)
 
-
     IPFS_hash, filesize = add_file_to_IPFS(listing_info['filename'], request.files['data'], app.config['UPLOAD_FOLDER'])
 
-
-    print('GET METADATA')
     meta=getMetadata(json.dumps(listing_info['category_name']))
-
     if meta == 'Fail':
         return make_response(jsonify({'message':'Category doesnt exist'}),422)
 
-    print('TEST DATA')
     df = load_data(os.path.join(app.config['UPLOAD_FOLDER'],secure_filename(listing_info['filename'])),meta)
     if df is None:
         return make_response(jsonify({'message':'Data file column number doesnt match metadata'}),422)
@@ -152,7 +143,6 @@ def  publisher():
             }, ignore_nan=True, sort_keys=True
             ), 422)
 
-    print ('PUBLISH DATA')
     result = record_listing (db,
         IPFS_hash,
         current_identity,
@@ -161,8 +151,6 @@ def  publisher():
         listing_info['price'],
         json.dumps(listing_info['category_name']),
         listing_info['keywords'])
-
-    print ("DATA PUBLISHED SUCCESSFULLY !!!")
 
     return make_response(simplejson.dumps({'message': result}, ignore_nan=True), 200) # Simple json is used to handle Nan values in test result numpy array TestIsNull
 
