@@ -88,13 +88,7 @@ def load_data(path,meta):
         for i in cols:
             ren[i]=colnames[i]
 
-        print (ren)
-
         df=df.rename(index=str, columns=ren)
-
-        print(df)
-
-
 
         return df
 
