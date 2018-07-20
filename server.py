@@ -59,7 +59,9 @@ def server_internal_Error(e):
     }), 401
 
 
-
+@app.errorhandler(400)
+def page_not_found(e):
+    return jsonify(error=400, text=str(e)), 400
 
 
 # FROM Categories.py : uses validate_category and create_category
@@ -103,13 +105,15 @@ def validate_metadata():
     try:
         meta=data['DataStructure']
     except:
-        return json.dumps({'Result':'No Data Structure'})
+        return make_response(jsonify({'message': 'No Data Structure'}),422)
 
 
     test_data=validate_category(meta)
     if test_data == []:
-        return "Data matches metadata defitinion"
-    return json.dumps({'Result': 'Metadata Error', 'DataErrors':test_data})
+        return make_response(jsonify({'message': 'Data matches metadata defitinion'}),200)
+
+    return make_response(jsonify({'message': 'Metadata Error', 'error':test_data}),422)
+#    return json.dumps({'Result': 'Metadata Error', 'DataErrors':test_data})
 
 
 
@@ -117,16 +121,12 @@ def validate_metadata():
 @jwt_required()
 def  publisher():
 
+
     print(request.files)
     print('EXTRACT FILES FOM REQUEST')
-    try:
-        data = request.files['data']
-    except KeyError:
-        return make_response(jsonify({'message': 'Data missing'}),422)
-    try:
-        listing_info=request.files['listing_info']
-    except KeyError:
-        return make_response(jsonify({'message': 'Listing missing'}),422)
+
+    data = request.files['data']
+    listing_info=request.files['listing_info']
 
     print('GET LISTING INFO')
     f = listing_info.read().decode("utf-8")
@@ -157,12 +157,12 @@ def  publisher():
 
     if meta == 'Fail':
 
-        return make_response(jsonify({'status':'error','message':'Category doesnt exist'}),422)
+        return make_response(jsonify({'message':'Category doesnt exist'}),422)
 
     print('TEST DATA')
     df = load_data(os.path.join(app.config['UPLOAD_FOLDER'],file_name),meta)
     if df is None:
-        return make_response(jsonify({'status':'error','message':'Data file column number doesnt match metadata'}),422)
+        return make_response(jsonify({'message':'Data file column number doesnt match metadata'}),422)
 
 
 
