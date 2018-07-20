@@ -61,7 +61,7 @@ def server_internal_Error(e):
 
 @app.errorhandler(400)
 def page_not_found(e):
-    return jsonify(error=400, text=str(e)), 400
+    return make_response(jsonify(error=400, text=str(e)), 400)
 
 
 # FROM Categories.py : uses validate_category and create_category
@@ -126,41 +126,26 @@ def  publisher():
     print('EXTRACT FILES FOM REQUEST')
 
     data = request.files['data']
-    listing_info=request.files['listing_info']
-
-    print('GET LISTING INFO')
-    f = listing_info.read().decode("utf-8")
+    f=request.files['listing_info'].read().decode("utf-8")
     listing_info=json.loads(f)
+
+
+    IPFS_hash, filesize = add_file_to_IPFS(listing_info['filename'])
 
     catname=json.dumps(listing_info['category_name'])
     price=listing_info['price']
     filename=listing_info['filename']
     keywords=listing_info['keywords']
 
-    print(catname, price, filename, keywords)
 
-    print('SAVE FILE')
-    file_name=secure_filename(filename)
-    data.save(os.path.join(app.config['UPLOAD_FOLDER'],file_name))
-
-    print('ADD FILE TO IPFS')
-    api = ipfsapi.connect('127.0.0.1', 5001)
-    res = api.add(os.path.join(app.config['UPLOAD_FOLDER'],file_name))
-    IPFS_hash=res['Hash']
-    filesize=res['Size']
-
-
-
-    print(catname)
     print('GET METADATA')
     meta=getMetadata(catname)
 
     if meta == 'Fail':
-
         return make_response(jsonify({'message':'Category doesnt exist'}),422)
 
     print('TEST DATA')
-    df = load_data(os.path.join(app.config['UPLOAD_FOLDER'],file_name),meta)
+    df = load_data(os.path.join(app.config['UPLOAD_FOLDER'],secure_filename(listing_info['filename'])),meta)
     if df is None:
         return make_response(jsonify({'message':'Data file column number doesnt match metadata'}),422)
 
