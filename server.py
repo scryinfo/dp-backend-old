@@ -3,7 +3,7 @@ from flask import Flask,request, jsonify,make_response, render_template, Respons
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
 from categories import create_category,validate_category
-from publisher import publish_data,getMetadata,fullTest, load_data, record_listing
+from publisher import publish_data,getMetadata,fullTest, load_data, record_listing,add_file_to_IPFS
 from model import db, Categories, Trader, Listing
 from peewee import IntegrityError,OperationalError,InternalError
 import simplejson
@@ -130,16 +130,11 @@ def  publisher():
     listing_info=json.loads(f)
 
 
-    IPFS_hash, filesize = add_file_to_IPFS(listing_info['filename'])
-
-    catname=json.dumps(listing_info['category_name'])
-    price=listing_info['price']
-    filename=listing_info['filename']
-    keywords=listing_info['keywords']
+    IPFS_hash, filesize = add_file_to_IPFS(listing_info['filename'], request.files['data'], app.config['UPLOAD_FOLDER'])
 
 
     print('GET METADATA')
-    meta=getMetadata(catname)
+    meta=getMetadata(json.dumps(listing_info['category_name']))
 
     if meta == 'Fail':
         return make_response(jsonify({'message':'Category doesnt exist'}),422)
@@ -149,8 +144,6 @@ def  publisher():
     if df is None:
         return make_response(jsonify({'message':'Data file column number doesnt match metadata'}),422)
 
-
-
     test_result, test_failed=fullTest (df, meta)
     if test_failed == 1:
         return make_response(simplejson.dumps({
@@ -159,11 +152,15 @@ def  publisher():
             }, ignore_nan=True, sort_keys=True
             ), 422)
 
-
-
     print ('PUBLISH DATA')
-    trader_id = current_identity
-    result = record_listing (db, IPFS_hash, trader_id, filesize, filename, price, catname, keywords)
+    result = record_listing (db,
+        IPFS_hash,
+        current_identity,
+        filesize,
+        listing_info['filename'],
+        listing_info['price'],
+        json.dumps(listing_info['category_name']),
+        listing_info['keywords'])
 
     print ("DATA PUBLISHED SUCCESSFULLY !!!")
 

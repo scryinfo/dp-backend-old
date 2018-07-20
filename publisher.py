@@ -9,17 +9,19 @@ from peewee import IntegrityError
 import ipfsapi
 import simplejson
 import datetime
+from werkzeug.utils import secure_filename
+
 
 
 testdata_path=TEST_DATA_PATH
 #Test Hash : --> Hello World
 #hash='QmZ4tDuvesekSs4qM5ZBKpXiZGun7S2CYtEZRB3DYXkjGx'
 
-def add_file_to_IPFS(filename):
+def add_file_to_IPFS(filename, data, upload_folder):
     file_name=secure_filename(filename)
-    data.save(os.path.join(app.config['UPLOAD_FOLDER'],file_name))
+    data.save(os.path.join(upload_folder,file_name))
     api = ipfsapi.connect('127.0.0.1', 5001)
-    res = api.add(os.path.join(app.config['UPLOAD_FOLDER'],file_name))
+    res = api.add(os.path.join(upload_folder,file_name))
     return res['Hash'], res['Size']
 
 
