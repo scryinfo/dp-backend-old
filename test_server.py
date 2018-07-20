@@ -171,7 +171,6 @@ class PublisherTest(unittest.TestCase):
 
         self.assertEqual(
             {'FieldLength': [], 'IsPrimaryKey': [], 'IsNull': [['AirlineId', ['2', 2], ['3', 2]]], 'IsUnique': [['AirlineId', ['2', 2], ['3', 2]]], 'ForeignDataHash': [], 'DataType': []}
-
             ,
             error.exception.response['error']
         )
@@ -206,13 +205,24 @@ class PublisherTest(unittest.TestCase):
 
     def test_data_file_missing(self):
         warnings.simplefilter("ignore")
-        with self.assertRaises(ScryApiException):
+        with self.assertRaises(ScryApiException) as error:
             self.publish_data(listing_file="Schedule_listing.json")
+
+        self.assertEqual(
+            error.exception.response
+            ,{'text': "400 Bad Request: KeyError: 'data'", 'error': 400}
+            )
 
     def test_listing_file_missing(self):
         warnings.simplefilter("ignore")
-        with self.assertRaises(ScryApiException):
+        with self.assertRaises(ScryApiException) as error:
             response = self.publish_data(data_file="schedule.csv")
+
+        self.assertEqual(
+            error.exception.response
+            ,{'text': "400 Bad Request: KeyError: 'listing_info'", 'error': 400}
+            )
+
 
     def test_insert_schedule_data_successfully(self):
         warnings.simplefilter("ignore")
