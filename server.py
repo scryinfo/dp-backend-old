@@ -40,7 +40,7 @@ UPLOAD_FOLDER = './uploaded/'
 app = Flask(__name__)
 CORS(app)
 
-#app.debug = True
+app.debug = True
 app.config['SECRET_KEY'] = 'secret'
 app.config['JWT_VERIFY_CLAIMS']=['signature', 'exp',  'iat']
 app.config['JWT_REQUIRED_CLAIMS']=['exp',  'iat']
@@ -61,6 +61,7 @@ def server_internal_Error(e):
 
 @app.errorhandler(400)
 def page_not_found(e):
+    print(e)
     return make_response(jsonify(error=400, text=str(e)), 400)
 
 
@@ -133,8 +134,6 @@ def  publisher():
     IPFS_hash, filesize = add_file_to_IPFS(listing_info['filename'], request.files['data'], app.config['UPLOAD_FOLDER'])
 
     meta=getMetadata(json.dumps(listing_info['category_name']))
-    if meta == 'Fail':
-        return make_response(jsonify({'message':'Category doesnt exist'}),422)
 
     df = load_data(os.path.join(app.config['UPLOAD_FOLDER'],secure_filename(listing_info['filename'])),meta)
     if df is None:

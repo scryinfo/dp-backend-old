@@ -258,13 +258,9 @@ def fullTest(df, meta, master=masterMetaData):
 
 
 
-def getMetadata(category_name=None,file_path=None):
-    try:
-        catdata= Categories.select().where(Categories.name == category_name).get()
-        result=catdata.metadata
-    except:
-        result='Fail'
-    return result
+def getMetadata(category_name=None):
+    catdata=Categories.get(Categories.name==category_name)
+    return catdata.metadata
 
 
 def record_listing(db,file_cid,trader_id,size,filename,price,catname,keywords):
