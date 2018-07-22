@@ -37,9 +37,7 @@ with open('./demo/demo.json') as jsonfile:
     test_scenario = json.load(jsonfile)
 
 for i in test_scenario:
-
-    payload = api.from_filenames_to_publisher_payload(i['Data'], i['Listing'])
-    response = api.publisher(payload)
+    response = api.publisher(i['Data'], i['Listing'])
     print(response == i['TestResult'])
     print(response)
 

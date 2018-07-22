@@ -134,30 +134,26 @@ class PublisherTest(unittest.TestCase):
         api.listing_path = './demo/listing_info/'
         return api
 
-    def publish_data(self, data_file=None, listing_file=None):
+    def publish_data(self, data=None, listing_info=None):
         api = self.make_api()
         api.login(**test_credentials)
-        payload = api.from_filenames_to_publisher_payload(data=data_file, listing_info=listing_file)
-        return api.publisher(payload)
+        return api.publisher(data=data, listing_info=listing_info)
 
     def test_publish_with_no_jwt(self):
         api = self.make_api()
         with self.assertRaises(ScryApiException):
-            return api.publisher(self.make_publisher_default_payload(api))
-
-    def make_publisher_default_payload(self, api):
-        return api.from_filenames_to_publisher_payload(data="airlines_null.dat", listing_info="Airlines_listing.json")
+            return api.publisher(data="airlines_null.dat", listing_info="Airlines_listing.json")
 
     def test_publish_data_with_wrong_jwt(self):
         api = self.make_api()
         api.login(**test_credentials)
         api.jwt_token += 'a'
         with self.assertRaises(ScryApiException):
-            return api.publisher(self.make_publisher_default_payload(api))
+            return api.publisher(data="airlines_null.dat", listing_info="Airlines_listing.json")
 
     def test_null_in_not_null_column(self):
         with self.assertRaises(ScryApiException) as error:
-            self.publish_data(data_file="airlines_null.dat", listing_file="Airlines_listing.json")
+            self.publish_data(data="airlines_null.dat", listing_info="Airlines_listing.json")
 
 
         self.assertEqual(
@@ -178,7 +174,7 @@ class PublisherTest(unittest.TestCase):
 
     def test_Float_and_String_in_int_Column(self):
         with self.assertRaises(ScryApiException) as error:
-            self.publish_data(data_file="airlines_int.dat", listing_file="Airlines_listing.json")
+            self.publish_data(data="airlines_int.dat", listing_info="Airlines_listing.json")
 
         self.assertEqual(
         error.exception.response['error']
@@ -188,7 +184,7 @@ class PublisherTest(unittest.TestCase):
 
     def test_String_in_float_Column(self):
         with self.assertRaises(ScryApiException) as error:
-            self.publish_data(data_file="airlines_float.dat", listing_file="Airlines_listing_float.json")
+            self.publish_data(data="airlines_float.dat", listing_info="Airlines_listing_float.json")
 
         self.assertEqual(
                 error.exception.response['error'],
@@ -197,12 +193,12 @@ class PublisherTest(unittest.TestCase):
 
     def test_insert_schedule_data_successfully(self):
         self.assertEqual(
-            self.publish_data(data_file="schedule.csv", listing_file="Schedule_listing.json"),
+            self.publish_data(data="schedule.csv", listing_info="Schedule_listing.json"),
             "Success")
 
     def test_data_file_missing(self):
         with self.assertRaises(ScryApiException) as error:
-            self.publish_data(listing_file="Schedule_listing.json")
+            self.publish_data(listing_info="Schedule_listing.json")
 
         self.assertEqual(
             error.exception.response
@@ -212,7 +208,7 @@ class PublisherTest(unittest.TestCase):
     def test_listing_file_missing(self):
         warnings.simplefilter("ignore")
         with self.assertRaises(ScryApiException) as error:
-            response = self.publish_data(data_file="schedule.csv")
+            response = self.publish_data(data="schedule.csv")
 
         self.assertEqual(
             error.exception.response
