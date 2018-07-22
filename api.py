@@ -79,8 +79,8 @@ class ScryApi(object):
     def search(self, payload):
         return self._get('search_keywords', params=payload)
 
-    def categories(self, payload):
-        return self._post('categories', json=payload)
+    def categories(self, metadata):
+        return self._post('categories', json=metadata)
 
     def listing_by_categories(self, payload):
         return self._get('listing_by_categories', params=payload)

@@ -48,7 +48,7 @@ class CategoryTest(unittest.TestCase):
     def test_create_new_category(self):
         api = ScryApi()
         api.login(**test_credentials)
-        payload = {
+        metadata = {
             "CategoryName": ["Aviation6", "Commercial Flights", "Airport Info"],
             "DataStructure":
                 [
@@ -63,19 +63,19 @@ class CategoryTest(unittest.TestCase):
                 ]
         }
         response = {"Result": "Category Created"}
-        self.assertEqual(api.categories(payload=payload), response)
-        return api, payload
+        self.assertEqual(api.categories(metadata=metadata), response)
+        return api, metadata
 
 
 
     def test_category_exists(self):
-        api, payload = self.test_create_new_category()
+        api, metadata = self.test_create_new_category()
         # TRICK: upload the same category again.
-        response = api.categories(payload=payload)
+        response = api.categories(metadata=metadata)
         self.assertEqual(response, {"Result": "CategoryName already exists"})
 
     def test_create_categories(self):
-        payload = {  # "CategoryName" key missing. Here written with an "s" --> "CategoryNames"
+        metadata = {  # "CategoryName" key missing. Here written with an "s" --> "CategoryNames"
             "CategoryNames": ["Aviation", "Commercial Flights", "Airport Info"],
             "DataStructure":
                 [
@@ -83,11 +83,11 @@ class CategoryTest(unittest.TestCase):
                 ]
         }
         response = {"Result": "No 'CategoryName'"}
-        self.assertEqual(ScryApi().categories(payload=payload), response)
+        self.assertEqual(ScryApi().categories(metadata=metadata), response)
 
 
     def test_no_datastructure(self):
-        payload = {  # "DataStructure" key missing. Here written with an "s" --> "DataStructures"
+        metadata = {  # "DataStructure" key missing. Here written with an "s" --> "DataStructures"
             "CategoryName": ["Aviation", "Commercial Flights", "Airport Info"],
             "DataStructures":
                 [
@@ -95,10 +95,10 @@ class CategoryTest(unittest.TestCase):
                 ]
         }
         response = {"Result": "No 'DataStructure'"}
-        self.assertEqual(ScryApi().categories(payload=payload), response)
+        self.assertEqual(ScryApi().categories(metadata=metadata), response)
 
     def test_categories_dirty(self):
-        payload = {
+        metadata = {
             "CategoryName": ["Aviation", "Commercial Flights", "Airport Info"],
             "DataStructure":
                 [  # "DataType" written with an "s" --> "DataTypes"
@@ -106,8 +106,8 @@ class CategoryTest(unittest.TestCase):
                 ]
         }
 
-        self.assertEqual(ScryApi().categories(payload=payload),  {'DataErrors': [['AirlineId', 'DataTypes', 'Int', "KeyError('DataTypes',)"]], 'Result': 'Metadata Error'}
-)
+        self.assertEqual(ScryApi().categories(metadata=metadata), {'DataErrors': [['AirlineId', 'DataTypes', 'Int', "KeyError('DataTypes',)"]], 'Result': 'Metadata Error'}
+                         )
 
 
 def search_keywords(keywords, searchtype, userpayload=test_credentials):
