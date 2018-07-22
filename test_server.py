@@ -1,4 +1,4 @@
-import json
+import json, os
 import unittest
 import warnings
 
@@ -13,6 +13,12 @@ meta_path = './demo/metadata/'
 
 test_credentials = {'username': '22', 'password': '22'}
 
+def initialize_categories():
+    api = ScryApi()
+    api.login(**test_credentials)
+    for files in os.listdir('./demo/metadata/'):
+        metadata = json.load(open('./demo/metadata/' + files))
+        api.categories(metadata)
 
 class JWTTest(unittest.TestCase):
     def test_correct_authentication(self):
@@ -219,13 +225,12 @@ class PublisherTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    initialize_categories()
     unittest.main()
 
 
 ## SEARCH KEYWORDS FUNCTION HAS A BUG
 class SearchKeywordsTest(unittest.TestCase):
-
-
     def setUp(self):
         userpayload={'username':'22','password':'22'}
         api = ScryApi()
