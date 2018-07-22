@@ -27,39 +27,40 @@ class ScryApi(object):
         listing=publisher_url
     )
 
+    def _get_url(self, path):
+        return self.paths[path] + path
+
+    def _make_headers(self):
+        if getattr(self, 'jwt_token', None) is not None:
+            return {"Authorization": "JWT " + self.jwt_token}
+
+
+    def _post(self, path, **payload):
+        r = requests.post(self._get_url(path), headers=self._make_headers(), **payload)
+        if r.status_code >= 400:
+            try:
+                response = json.loads(r.text)
+            except:
+                response = r.text
+                print('failed to decode response as JSON: "%s"' % response)
+            raise ScryApiException(r.status_code, response)
+        return json.loads(r.text)
+
+    def _get(self, path, **payload):
+        r = requests.get(self._get_url(path), payload, headers=self._make_headers())
+        if r.status_code >= 400:
+            try:
+                response = json.loads(r.text)
+            except:
+                response = r.text
+                print('failed to decode response as JSON: "%s"' % response)
+            raise ScryApiException(r.status_code, response)
+        return json.loads(r.text)
+
     def login(self, username, password):
         response = self._post('login', json=dict(username=username, password=password))
         self.jwt_token = response['token']
         return self.jwt_token
-
-    def get_url(self, path):
-        return self.paths[path] + path
-
-    def _post(self, path, **payload):
-        r = requests.post(self.get_url(path), headers=self.get_headers(), **payload)
-        if r.status_code >= 400:
-            try:
-                response = json.loads(r.text)
-            except:
-                response = r.text
-                print('failed to decode response as JSON: "%s"' % response)
-            raise ScryApiException(r.status_code, response)
-        return json.loads(r.text)
-
-    def get(self, path, **payload):
-        r = requests.get(self.get_url(path), payload, headers=self.get_headers())
-        if r.status_code >= 400:
-            try:
-                response = json.loads(r.text)
-            except:
-                response = r.text
-                print('failed to decode response as JSON: "%s"' % response)
-            raise ScryApiException(r.status_code, response)
-        return json.loads(r.text)
-
-    def get_headers(self):
-        if getattr(self, 'jwt_token', None) is not None:
-            return {"Authorization": "JWT " + self.jwt_token}
 
     def protected(self):
         return self._post('protected')
@@ -76,10 +77,10 @@ class ScryApi(object):
         return payload
 
     def search(self, payload):
-        return self.get('search_keywords', params=payload)
+        return self._get('search_keywords', params=payload)
 
     def categories(self, payload):
         return self._post('categories', json=payload)
 
     def listing_by_categories(self, payload):
-        return self.get('listing_by_categories', params=payload)
+        return self._get('listing_by_categories', params=payload)
