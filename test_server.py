@@ -1,151 +1,45 @@
-import requests
-import json
+import json, os
+import unittest
+import warnings
+
+from api import ScryApiException, ScryApi
+
 from categories import create_category
 from model import db, Categories
-import warnings
-import unittest
-
-meta_path='./demo/metadata/'
-
-# "CategoryName" missing. Here written with an "s" --> "CategoryNames"
-def test_no_categories(path):
-    payload={
-    "CategoryNames": ["Aviation","Commercial Flights","Airport Info"],
-    "DataStructure":
-            [
-            {"AirlineId": {"DataType":"Int", "IsUnique":"true","IsPrimaryKey":"true"}}
-            ]
-    }
-    r = requests.post(path+'categories', json = payload)
-    return r.text
-
-# "DataStructure" missing. Here written with an "s" --> "DataStructures"
-def test_no_datastructure(path):
-    payload={
-    "CategoryName": ["Aviation","Commercial Flights","Airport Info"],
-    "DataStructures":
-            [
-            {"AirlineId": {"DataType":"Int", "IsUnique":"true","IsPrimaryKey":"true"}}
-            ]
-    }
-    r = requests.post(path+'categories', json = payload)
-    return r.text
-
-# "DataType" written with an "s" --> "DataTypes"
-def test_categories_dirty(path):
-    payload={
-    "CategoryName": ["Aviation","Commercial Flights","Airport Info"],
-    "DataStructure":
-            [
-            {"AirlineId": {"DataTypes":"Int", "IsUnique":"true","IsPrimaryKey":"true"}},
-            ]
-    }
-    r = requests.post(path+'categories', json = payload)
-    return r.text
 
 
-def test_categories(path,jwt_server_path,upayload):
-    jwtToken=test_jwt_scry(jwt_server_path,upayload)
-    headers = {"Authorization": "JWT "+jwtToken}
-    payload={
-    "CategoryName": ["Aviation6", "Commercial Flights", "Airport Info"],
-    "DataStructure":
-            [
-            {"AirlineId": {"DataType":"Int", "IsUnique":"true","IsPrimaryKey":"true"}},
-            {"AirlineName": {"DataType":"String", "IsUnique":"true"}},
-            {"ANA": {"DataType":"String", "IsUnique":"true"}},
-            {"IATA": {"DataType":"String", "IsUnique":"true", "IsNull":"true"}},
-            {"IACAO": {"DataType":"String", "IsUnique":"true", "IsNull":"true"}},
-            {"Callsign":{"DataType":"String", "IsUnique":"true"}},
-            {"Country": {"DataType":"String"}},
-            {"Active": {"DataType":"String"}}
-            ]
-    }
-
-    r = requests.post(path+'categories', json = payload,headers=headers)
-    result=r.text
-    print(result)
-    return result
+meta_path = './demo/metadata/'
 
 
+test_credentials = {'username': '22', 'password': '22'}
 
+def initialize_categories():
+    api = ScryApi()
+    api.login(**test_credentials)
+    for files in os.listdir('./demo/metadata/'):
+        metadata = json.load(open('./demo/metadata/' + files))
+        api.categories(metadata)
 
-def test_jwt_scry(jwt_server_path,payload):
-    r = requests.post(jwt_server_path+'login', json = payload)
-    rs=json.loads(r.text)
-    jwtToken=json.loads(r.text)['token']
-    return jwtToken
-
-
-def test_auth_right_JWT(path,jwt_server_path,payload):
-    jwtToken=test_jwt_scry(jwt_server_path,payload)
-    headers = {"Authorization": "JWT "+jwtToken}
-    r = requests.get(path+'protected', headers=headers)
-    return('Protected using Scry Token : '+ r.text)
-
-
-
-
-
-def test_auth_wrong_JWT(path,jwt_server_path,payload):
-    jwtToken=test_jwt_scry(jwt_server_path,payload)
-    print(jwtToken)
-    headers = {"Authorization": "JWT "+jwtToken+'a'}
-    r = requests.get(path+'protected', headers=headers)
-    return 'Protected using Wrong Token : '+ r.text
-
-
-
-
-def test_json(path):
-    payload={"CategoryNames": ["Aviation","Commercial Flights","Airport Info"],"Test":True}
-    payload=json.dumps(payload)
-    print(payload)
-    print(type(payload))
-    r = requests.post(path+'test_json', json = payload)
-    print(r.text)
-
-
-
-def test_getcategories(path,jwt_server_path,payload):
-    jwtToken=test_jwt_scry(jwt_server_path,payload)
-    headers = {"Authorization": "JWT "+jwtToken}
-
-    r = requests.post(path+'getcategories', headers=headers)
-
-    result=r.text
-    print(result)
-    return result
-
-publisher_path='http://localhost:2222/'
-scry_path='http://localhost:1234/'
-userpayload={'username':'22','password':'22'}
-#scry_path='https://dev.scry.info:443/scry2/'
-#publisher_path='https://dev.scry.info:443/meta/'
-
-
-
-class JWT_Test(unittest.TestCase):
+class JWTTest(unittest.TestCase):
+    def test_correct_authentication(self):
+        ScryApi().login(**test_credentials)
 
     def test_wrong_authentication(self):
-        userpayload2={'username':'22','password':'223'}
-        r=''
-        try:
-            test_jwt_scry(scry_path,userpayload2)
-        except KeyError:
-            r='Wrong Credentials'
-        self.assertEqual(r,'Wrong Credentials')
+        with self.assertRaises(Exception):
+            ScryApi().login(username='22', password='223')
 
-def publish_data(data_file,listing_file,userpayload=userpayload,publisher_path=publisher_path,scry_path=scry_path):
-    jwtToken=get_jwt_scry(scry_path,userpayload)
-    headers = {"Authorization": "JWT "+jwtToken}
+    def test_aut1(self):
+        api = ScryApi()
+        api.login(**test_credentials)
+        with self.assertRaises(ScryApiException):
+            api.protected()
 
-    f1=open(data_file,'rb')
-    f2= open(listing_file)
-    files = {'data': f1,'listing_info':f2}
-
-    r = requests.post(publisher_path+'publisher',files=files,headers=headers)
-    return r.text
+    def test_aut2(self):
+        api = ScryApi()
+        api.login(**test_credentials)
+        api.jwt_token += 'a'  # TRICK: corrupt jwt_token value.
+        with self.assertRaises(ScryApiException):
+           api.protected()
 
 
 class CategoryTest(unittest.TestCase):
@@ -158,162 +52,185 @@ class CategoryTest(unittest.TestCase):
         db.execute_sql("""DELETE FROM scry2.categories where name='["Aviation6", "Commercial Flights", "Airport Info"]';""")
 
     def test_create_new_category(self):
-        self.assertEqual(test_categories(publisher_path,scry_path,userpayload),'{"Result": "Category Created"}')
+        api = ScryApi()
+        api.login(**test_credentials)
+        metadata = {
+            "CategoryName": ["Aviation6", "Commercial Flights", "Airport Info"],
+            "DataStructure":
+                [
+                    {"AirlineId": {"DataType": "Int", "IsUnique": "true", "IsPrimaryKey": "true"}},
+                    {"AirlineName": {"DataType": "String", "IsUnique": "true"}},
+                    {"ANA": {"DataType": "String", "IsUnique": "true"}},
+                    {"IATA": {"DataType": "String", "IsUnique": "true", "IsNull": "true"}},
+                    {"IACAO": {"DataType": "String", "IsUnique": "true", "IsNull": "true"}},
+                    {"Callsign": {"DataType": "String", "IsUnique": "true"}},
+                    {"Country": {"DataType": "String"}},
+                    {"Active": {"DataType": "String"}}
+                ]
+        }
+        response = {"Result": "Category Created"}
+        self.assertEqual(api.categories(metadata=metadata), response)
+        return api, metadata
+
+
 
     def test_category_exists(self):
-        test_categories(publisher_path,scry_path,userpayload)
-        self.assertEqual(test_categories(publisher_path,scry_path,userpayload),'{"Result": "Category Name already exists"}')
+        api, metadata = self.test_create_new_category()
+        # TRICK: upload the same category again.
+        response = api.categories(metadata=metadata)
+        self.assertEqual(response, {"Result": "CategoryName already exists"})
 
     def test_create_categories(self):
-        self.assertEqual(test_no_categories(publisher_path), '{"Result": "No Category"}')
+        metadata = {  # "CategoryName" key missing. Here written with an "s" --> "CategoryNames"
+            "CategoryNames": ["Aviation", "Commercial Flights", "Airport Info"],
+            "DataStructure":
+                [
+                    {"AirlineId": {"DataType": "Int", "IsUnique": "true", "IsPrimaryKey": "true"}}
+                ]
+        }
+        response = {"Result": "No 'CategoryName'"}
+        self.assertEqual(ScryApi().categories(metadata=metadata), response)
+
 
     def test_no_datastructure(self):
-        self.assertEqual(test_no_datastructure(publisher_path),'{"Result": "No Data Structure"}')
+        metadata = {  # "DataStructure" key missing. Here written with an "s" --> "DataStructures"
+            "CategoryName": ["Aviation", "Commercial Flights", "Airport Info"],
+            "DataStructures":
+                [
+                    {"AirlineId": {"DataType": "Int", "IsUnique": "true", "IsPrimaryKey": "true"}}
+                ]
+        }
+        response = {"Result": "No 'DataStructure'"}
+        self.assertEqual(ScryApi().categories(metadata=metadata), response)
 
     def test_categories_dirty(self):
-        self.assertEqual(test_categories_dirty(publisher_path),'{"Result": "Metadata Error", "DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"]]}')
-#        '{"DataErrors": [["AirlineId", "DataTypes", "Int", "Key Error"], ["AirlineName", "DataType", "Strings", "No Match"]], "Result": "Metadata Error"}')
+        metadata = {
+            "CategoryName": ["Aviation", "Commercial Flights", "Airport Info"],
+            "DataStructure":
+                [  # "DataType" written with an "s" --> "DataTypes"
+                    {"AirlineId": {"DataTypes": "Int", "IsUnique": "true", "IsPrimaryKey": "true"}},
+                ]
+        }
+
+        self.assertEqual(ScryApi().categories(metadata=metadata), {'DataErrors': [['AirlineId', 'DataTypes', 'Int', "KeyError('DataTypes',)"]], 'Result': 'Metadata Error'}
+                         )
 
 
-
-def publish_data(data_file_path,listing_file_path,userpayload=userpayload,publisher_path=publisher_path,scry_path=scry_path):
-    jwtToken=test_jwt_scry(scry_path,userpayload)
-    headers = {"Authorization": "JWT "+jwtToken}
-
-    f1=open(data_file_path,'rb')
-    f2= open(listing_file_path)
-    files = {'data': f1,'listing_info':f2}
-
-    r = requests.post(publisher_path+'publisher',files=files,headers=headers)
-
-    return r.text
-
-def publish_data_no_data(data_file,listing_file,publisher_path=publisher_path,scry_path=scry_path,userpayload=userpayload):
-    jwtToken=test_jwt_scry(scry_path,userpayload)
-    headers = {"Authorization": "JWT "+jwtToken}
-
-    f1=open(data_file,'rb')
-    f2= open(listing_file)
-    files ={'listing_info':f2}
-
-    r = requests.post(publisher_path+'publisher',files=files,headers=headers)
-    result=r.text
-    return result
-
-def publish_data_no_JWT(data_file,listing_file,publisher_path=publisher_path,scry_path=scry_path,userpayload=userpayload):
-    jwtToken=test_jwt_scry(scry_path,userpayload)
-    headers = {"Authorization": "JWT "+jwtToken}
-
-
-    f1=open(data_file,'rb')
-    f2= open(listing_file)
-    files ={'listing_info':f2}
-
-    r = requests.post(publisher_path+'publisher',files=files)
-    return r.text
-
-
-def publish_data_wrong_JWT(data_file,listing_file,publisher_path=publisher_path,scry_path=scry_path,userpayload=userpayload):
-    jwtToken=test_jwt_scry(scry_path,userpayload)
-
-    f1=open(data_file,'rb')
-    f2= open(listing_file)
-    files ={'listing_info':f2}
-
-    r = requests.post(publisher_path+'publisher',files=files)
-    return r.text
-
-
-
-def publish_data_no_listing(data_file,listing_file,publisher_path=publisher_path,scry_path=scry_path,userpayload=userpayload):
-    jwtToken=test_jwt_scry(scry_path,userpayload)
-    headers = {"Authorization": "JWT "+jwtToken}
-
-    f1=open(data_file,'rb')
-    f2= open(listing_file)
-    files ={'data': f1}
-
-    r = requests.post(publisher_path+'publisher',files=files,headers=headers)
-    result=r.text
-    return result
-
-
-def search_keywords(keywords,searchtype,publisher_path=publisher_path,scry_path=scry_path,userpayload=userpayload):
-    jwtToken=test_jwt_scry(scry_path,userpayload)
-    headers = {"Authorization": "JWT "+jwtToken}
-
+def search_keywords(keywords, searchtype, userpayload=test_credentials):
+    api = ScryApi()
+    api.login(userpayload)
     payload = {
         'keywords': keywords,
         'searchtype' : searchtype
         }
-    r = requests.get(publisher_path+'search_keywords',params=payload,headers=headers)
-    return r.text
-
-
-data_path='./demo/data/'
-listing_path='./demo/listing_info/'
+    return api.search(payload)
 
 
 class PublisherTest(unittest.TestCase):
 
-    def test_publish_with_no_JWT(self):
-        warnings.simplefilter("ignore")
-        self.assertEqual(json.loads(publish_data_no_JWT(data_path+"airlines_null.dat",listing_path+"Airlines_listing.json")),{'description': 'Request does not contain an access token', 'error': 'Authorization Required', 'status_code': 401}        )
+    def make_api(self):
+        api = ScryApi()
+        api.data_path = './demo/data/'
+        api.listing_path = './demo/listing_info/'
+        return api
 
-    def test_Null_in_NotNull_Column(self):
-        warnings.simplefilter("ignore")
-        self.assertEqual(publish_data(data_path+"airlines_null.dat",listing_path+"Airlines_listing.json"),"[\"Test Failed\", {\"DataType\": [], \"FieldLength\": [], \"ForeignDataHash\": [], \"IsNull\": [[\"IATA\", [\"2\", null]], [\"ICAO\", [\"0\", null], [\"1\", null]], [\"Callsign\", [\"1\", null]], [\"Country\", [\"1\", null]]], \"IsPrimaryKey\": [], \"IsUnique\": []}]")
+    def publish_data(self, data=None, listing_info=None):
+        api = self.make_api()
+        api.login(**test_credentials)
+        return api.publisher(data=data, listing_info=listing_info)
+
+    def test_publish_with_no_jwt(self):
+        api = self.make_api()
+        with self.assertRaises(ScryApiException):
+            return api.publisher(data="airlines_null.dat", listing_info="Airlines_listing.json")
+
+    def test_publish_data_with_wrong_jwt(self):
+        api = self.make_api()
+        api.login(**test_credentials)
+        api.jwt_token += 'a'
+        with self.assertRaises(ScryApiException):
+            return api.publisher(data="airlines_null.dat", listing_info="Airlines_listing.json")
+
+    def test_null_in_not_null_column(self):
+        with self.assertRaises(ScryApiException) as error:
+            self.publish_data(data="airlines_null.dat", listing_info="Airlines_listing.json")
+
+
+        self.assertEqual(
+                error.exception.response['error'],
+                {'IsUnique': [], 'IsNull': [['IATA', ['2', None]], ['ICAO', ['0', None], ['1', None]], ['Callsign', ['1', None]], ['Country', ['1', None]]], 'DataType': [], 'FieldLength': [], 'IsPrimaryKey': [], 'ForeignDataHash': []}
+            )
+
 
     def test_Duplicates_in_Unique_Column(self):
-        warnings.simplefilter("ignore")
-        print(publish_data(data_path+"airlines_duplicate.dat",listing_path+"Airlines_listing.json"))
-        self.assertEqual(publish_data(data_path+"airlines_duplicate.dat",listing_path+"Airlines_listing.json"),"[\"Test Failed\", {\"DataType\": [], \"FieldLength\": [], \"ForeignDataHash\": [], \"IsNull\": [], \"IsPrimaryKey\": [], \"IsUnique\": [[\"AirlineId\", [\"2\", 2], [\"3\", 2]]]}]")
+        with self.assertRaises(ScryApiException) as error:
+            self.publish_data("airlines_duplicate.dat", "Airlines_listing.json")
+
+        self.assertEqual(
+            {'FieldLength': [], 'IsUnique': [['AirlineId', ['2', 2], ['3', 2]]], 'DataType': [], 'IsNull': [], 'ForeignDataHash': [], 'IsPrimaryKey': []}
+            ,
+            error.exception.response['error']
+        )
 
     def test_Float_and_String_in_int_Column(self):
-        warnings.simplefilter("ignore")
-        self.assertEqual(publish_data(data_path+"airlines_int.dat",listing_path+"Airlines_listing.json"),"[\"Test Failed\", {\"DataType\": [[\"AirlineId\", [\"1\", \"1.1\"], [\"2\", \"2a\"]]], \"FieldLength\": [], \"ForeignDataHash\": [], \"IsNull\": [], \"IsPrimaryKey\": [], \"IsUnique\": []}]")
+        with self.assertRaises(ScryApiException) as error:
+            self.publish_data(data="airlines_int.dat", listing_info="Airlines_listing.json")
+
+        self.assertEqual(
+        error.exception.response['error']
+        ,
+        {'ForeignDataHash': [], 'IsNull': [], 'IsUnique': [], 'FieldLength': [], 'DataType': [['AirlineId', ['1', '1.1'], ['2', '2a']]], 'IsPrimaryKey': []}
+        )
 
     def test_String_in_float_Column(self):
-        warnings.simplefilter("ignore")
-        self.assertEqual(publish_data(data_path+"airlines_float.dat",listing_path+"Airlines_listing_float.json"),"[\"Test Failed\", {\"DataType\": [[\"AirlineId\", [\"2\", \"2a\"]]], \"FieldLength\": [], \"ForeignDataHash\": [], \"IsNull\": [], \"IsPrimaryKey\": [], \"IsUnique\": []}]")
+        with self.assertRaises(ScryApiException) as error:
+            self.publish_data(data="airlines_float.dat", listing_info="Airlines_listing_float.json")
+
+        self.assertEqual(
+                error.exception.response['error'],
+                {'FieldLength': [], 'IsUnique': [], 'IsPrimaryKey': [], 'ForeignDataHash': [], 'DataType': [['AirlineId', ['2', '2a']]], 'IsNull': []}
+            )
 
     def test_insert_schedule_data_successfully(self):
-        warnings.simplefilter("ignore")
-        self.assertEqual(publish_data(data_path+"schedule.csv",listing_path+"Schedule_listing.json"),"\"Success\"")
+        self.assertEqual(
+            self.publish_data(data="schedule.csv", listing_info="Schedule_listing.json"),
+            "Success")
 
     def test_data_file_missing(self):
-        warnings.simplefilter("ignore")
-        self.assertEqual(json.loads(publish_data_no_data(data_path+"schedule.csv",listing_path+"Schedule_listing.json")),{'status': 'error', 'message': 'Data missing'})
+        with self.assertRaises(ScryApiException) as error:
+            self.publish_data(listing_info="Schedule_listing.json")
 
-    def test_data_listing_missing(self):
+        self.assertEqual(
+            error.exception.response
+            ,{'text': "400 Bad Request: KeyError: 'data'", 'error': 400}
+            )
+
+    def test_listing_file_missing(self):
         warnings.simplefilter("ignore")
-        self.assertEqual(json.loads(publish_data_no_listing(data_path+"schedule.csv",listing_path+"Schedule_listing.json")),{'message': 'Listing missing', 'status': 'error'})
+        with self.assertRaises(ScryApiException) as error:
+            response = self.publish_data(data="schedule.csv")
+
+        self.assertEqual(
+            error.exception.response
+            ,{'text': "400 Bad Request: KeyError: 'listing_info'", 'error': 400}
+            )
 
     def test_insert_schedule_data_successfully(self):
-        warnings.simplefilter("ignore")
-        self.assertEqual(publish_data(data_path+"schedule.csv",listing_path+"Schedule_listing.json"),"\"Success\"")
-
-
-
-
-
-
-
-
+        self.assertEqual(self.publish_data("schedule.csv", "Schedule_listing.json"),
+                         {'message': 'Success'})
 
 
 if __name__ == '__main__':
+    initialize_categories()
     unittest.main()
 
 
 ## SEARCH KEYWORDS FUNCTION HAS A BUG
 class SearchKeywordsTest(unittest.TestCase):
-
-
     def setUp(self):
         userpayload={'username':'22','password':'22'}
-        jwtToken=test_jwt_scry(scry_path,userpayload)
-        headers = {"Authorization": "JWT "+jwtToken}
+        api = ScryApi()
+        api.login(**userpayload)
 
         #Create category
         metadata=json.load(open(meta_path+'Schedule_Metadata.json'))
@@ -324,7 +241,7 @@ class SearchKeywordsTest(unittest.TestCase):
         f1=open(data_path+"schedule.csv",'rb')
         f2= json.loads='{"category_name":["Search Keywords"],"price":1000,"filename":"Airlines_float.csv","keywords":"blabla"}'
         files = {'data': f1,'listing_info':f2}
-        requests.post(publisher_path+'publisher',files=files,headers=headers)
+        api.publisher(files=files)
 
     def tearDown(self):
         cat=Categories.get(Categories.name=='["Search Keywords"]')
@@ -332,7 +249,8 @@ class SearchKeywordsTest(unittest.TestCase):
         db.execute_sql("""DELETE FROM scry2.listing WHERE "categoryId"={};""".format(cat_id))
         db.execute_sql("""DELETE FROM scry2.categories WHERE name='["Search Keywords"]';""")
 
-    def test_search_keywords(self):
-        print(search_keywords('blabla','["category","keywords"]'))
-
-        self.assertEqual(test_categories(publisher_path,scry_path,userpayload),'{"Result": "Category Created"}')
+    #WIP: "Charles" <chuck>
+    # def test_search_keywords(self):
+    #     print(search_keywords('blabla','["category","keywords"]'))
+    #
+    #     self.assertEqual(test_categories(publisher_path,scry_path,userpayload),'{"Result": "Category Created"}')

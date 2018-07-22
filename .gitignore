@@ -1,4 +1,7 @@
 /test_data
+/uploaded
+
+#python
 .DS_Store
 .env
 .flaskenv

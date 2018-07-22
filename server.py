@@ -3,7 +3,7 @@ from flask import Flask,request, jsonify,make_response, render_template, Respons
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
 from categories import create_category,validate_category
-from publisher import publish_data,getMetadata,fullTest, load_data, record_listing
+from publisher import publish_data,getMetadata,fullTest, load_data, record_listing,add_file_to_IPFS
 from model import db, Categories, Trader, Listing
 from peewee import IntegrityError,OperationalError,InternalError
 import simplejson
@@ -59,51 +59,49 @@ def server_internal_Error(e):
     }), 401
 
 
+@app.errorhandler(400)
+def page_not_found(e):
+    print(e)
+    return make_response(jsonify(error=400, text=str(e)), 400)
 
+
+@app.errorhandler(500)
+def page_not_found(e):
+    print(e)
+    return make_response(jsonify(error=500, text=str(e)), 500)
 
 
 # FROM Categories.py : uses validate_category and create_category
 @app.route('/categories',methods=['POST'])
 #@jwt_required()
-def  categories():
+def categories():
     print("*******  PRINT JSON *************")
     print(request.json)
     print()
-    # TEST 1 : Is it a JSON
-    if request.is_json:
-        data=request.get_json()
-        json_data=data
 
-        print(data)
-        # TEST 2 : Category Name True
-        try:
-            catname=data['CategoryName']
-        except KeyError:
-            return json.dumps({'Result':'No Category'})
+    if not request.is_json:
+        return json.dumps({'Result': 'Not Json'})
 
+    data=request.get_json()
+    print(data)
 
-        # TEST 3 : DataStructure True
-        try:
-            meta=data['DataStructure']
-        except:
-            return json.dumps({'Result':'No Data Structure'})
+    try:
+        test_data = validate_category(data['DataStructure'])
+        if test_data != []:
+            return json.dumps({'Result': 'Metadata Error', 'DataErrors': test_data})
 
-        #TEST 4 : Test Metadata
-        test_data=validate_category(meta)
-        if validate_category(data['DataStructure'])!=['Passed']:
-            return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
+        create_category(db, data['CategoryName'], data)
+        return json.dumps({'Result': 'Category Created'})
 
-        #TEST 5 : Create Data
-        rs=create_category(db, catname,data)
-#        rs=create_category(db, catname,json_data)
-        if rs=='already exists':
-            return json.dumps({'Result':'Category Name already exists'})
-        elif rs=='success':
-            return json.dumps({'Result':'Category Created'})
-        else:
-            return json.dumps({'Result':'Category Not Created'})
-    else:
-        return json.dumps({'Result':'Not Json'})
+    except KeyError as e:
+        return json.dumps({'Result': 'No %s' % str(e)})
+    except IntegrityError:
+        return json.dumps({'Result': "CategoryName already exists"})
+    except Exception as e:
+          return json.dumps({'Result': str(type(e)) + ":" + str(e)})
+
+    return json.dumps(['unexpected end'])
+
 
 @app.route('/validate_category',methods=['POST'])
 @jwt_required()
@@ -114,14 +112,15 @@ def validate_metadata():
     try:
         meta=data['DataStructure']
     except:
-        return json.dumps({'Result':'No Data Structure'})
+        return make_response(jsonify({'message': 'No Data Structure'}),422)
 
 
     test_data=validate_category(meta)
-    if validate_category(data['DataStructure'])!=['Passed']:
-        return json.dumps({'Result': 'Metadata Error','DataErrors':test_data})
-    else:
-         return "Data matches metadata defitinion"
+    if test_data == []:
+        return make_response(jsonify({'message': 'Data matches metadata defitinion'}),200)
+
+    return make_response(jsonify({'message': 'Metadata Error', 'error':test_data}),422)
+#    return json.dumps({'Result': 'Metadata Error', 'DataErrors':test_data})
 
 
 
@@ -129,69 +128,35 @@ def validate_metadata():
 @jwt_required()
 def  publisher():
 
-    print(request.files)
-    print('EXTRACT FILES FOM REQUEST')
-    try:
-        data = request.files['data']
-    except KeyError:
-        return make_response(jsonify({'status':'error','message':'Data missing'}),422)
-    try:
-        listing_info=request.files['listing_info']
-    except KeyError:
-        return make_response(jsonify({'status':'error','message':'Listing missing'}),422)
-
-    print('GET LISTING INFO')
-    f=listing_info.read()
-    f=f.decode("utf-8")
+    f=request.files['listing_info'].read().decode("utf-8")
     listing_info=json.loads(f)
 
-    catname=json.dumps(listing_info['category_name'])
-    price=listing_info['price']
-    filename=listing_info['filename']
-    keywords=listing_info['keywords']
+    IPFS_hash, filesize = add_file_to_IPFS(listing_info['filename'], request.files['data'], app.config['UPLOAD_FOLDER'])
 
-    print(catname, price, filename, keywords)
+    meta=getMetadata(json.dumps(listing_info['category_name']))
 
-    print('SAVE FILE')
-    file_name=secure_filename(filename)
-    data.save(os.path.join(app.config['UPLOAD_FOLDER'],file_name))
-
-    print('ADD FILE TO IPFS')
-    api = ipfsapi.connect('127.0.0.1', 5001)
-    res = api.add(os.path.join(app.config['UPLOAD_FOLDER'],file_name))
-    IPFS_hash=res['Hash']
-    filesize=res['Size']
-
-
-
-    print(catname)
-    print('GET METADATA')
-    meta=getMetadata(catname)
-
-    if meta == 'Fail':
-
-        return make_response(jsonify({'status':'error','message':'Category doesnt exist'}),422)
-
-    print('TEST DATA')
-    df = load_data(os.path.join(app.config['UPLOAD_FOLDER'],file_name),meta)
+    df = load_data(os.path.join(app.config['UPLOAD_FOLDER'],secure_filename(listing_info['filename'])),meta)
     if df is None:
-        return make_response(jsonify({'status':'error','message':'Data file column number doesnt match metadata'}),422)
-
-
+        return make_response(jsonify({'message':'Data file column number doesnt match metadata'}),422)
 
     test_result, test_failed=fullTest (df, meta)
     if test_failed == 1:
-        return str(simplejson.dumps(['Test Failed',test_result], ignore_nan=True, sort_keys=True))
+        return make_response(simplejson.dumps({
+            'message':'test failed',
+            'error': test_result
+            }, ignore_nan=True, sort_keys=True
+            ), 422)
 
+    result = record_listing (db,
+        IPFS_hash,
+        current_identity,
+        filesize,
+        listing_info['filename'],
+        listing_info['price'],
+        json.dumps(listing_info['category_name']),
+        listing_info['keywords'])
 
-
-    print ('PUBLISH DATA')
-    trader_id = current_identity
-    result = record_listing (db, IPFS_hash, trader_id, filesize, filename, price, catname, keywords)
-
-    print ("DATA PUBLISHED SUCCESSFULLY !!!")
-
-    return str(simplejson.dumps(result, ignore_nan=True)) # Simple json is used to handle Nan values in test result numpy array TestIsNull
+    return make_response(simplejson.dumps({'message': result}, ignore_nan=True), 200) # Simple json is used to handle Nan values in test result numpy array TestIsNull
 
 @app.route('/getcategories',methods=['GET'])
 @jwt_required()

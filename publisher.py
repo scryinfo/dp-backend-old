@@ -9,11 +9,20 @@ from peewee import IntegrityError
 import ipfsapi
 import simplejson
 import datetime
+from werkzeug.utils import secure_filename
+
 
 
 testdata_path=TEST_DATA_PATH
 #Test Hash : --> Hello World
 #hash='QmZ4tDuvesekSs4qM5ZBKpXiZGun7S2CYtEZRB3DYXkjGx'
+
+def add_file_to_IPFS(filename, data, upload_folder):
+    file_name=secure_filename(filename)
+    data.save(os.path.join(upload_folder,file_name))
+    api = ipfsapi.connect('127.0.0.1', 5001)
+    res = api.add(os.path.join(upload_folder,file_name))
+    return res['Hash'], res['Size']
 
 
 def getIpfsData(hash,test_folder):
@@ -79,13 +88,7 @@ def load_data(path,meta):
         for i in cols:
             ren[i]=colnames[i]
 
-        print (ren)
-
         df=df.rename(index=str, columns=ren)
-
-        print(df)
-
-
 
         return df
 
@@ -249,20 +252,9 @@ def fullTest(df, meta, master=masterMetaData):
 
 
 
-def getMetadata(category_name=None,file_path=None):
-    if category_name is None:
-        if file_path is None:
-            print("Please provide a file path or category name")
-        else:
-            print("file path :"+file_path)
-    else:
-        #catname='sdsds'
-        try:
-            catdata= Categories.select().where(Categories.name == category_name).get()
-            result=catdata.metadata
-        except:
-            result='Fail'
-    return result
+def getMetadata(category_name=None):
+    catdata=Categories.get(Categories.name==category_name)
+    return catdata.metadata
 
 
 def record_listing(db,file_cid,trader_id,size,filename,price,catname,keywords):

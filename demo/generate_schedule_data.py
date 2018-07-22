@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import tzinfo, timedelta, datetime
 import csv
 
-df=pd.read_csv('/home/chuck/scry3/publisher/demo/data/routes.dat',names=['airline','airlineId','origin','originId','destination','destinationId','Codeshare','stops','equipment'])
+df=pd.read_csv('./demo/data/routes.dat',names=['airline','airlineId','origin','originId','destination','destinationId','Codeshare','stops','equipment'])
 
 data=df[['airline','equipment','origin','destination']].values.tolist()
 

@@ -14,15 +14,14 @@ python server.py
 
 # USAGE INSTRUCTIONS (DEV)
 
-
-
-## RUN SCRY.INFO SERVER
-
-Install the repo https://github.com/scryInfo/scry and follow the instructions in the readme.md file to run the server.
---> requires installing IPFS and node
-
-
-Start server
+### Pre-requisite install scry.
+ Follow the repo https://github.com/scryInfo/scry/ to install full system.
+ 
+### Testing
+open the front end
+create a user with login=22 password=22
 ```
- . ./run.sh
+ python -m demo.demo_publisher
+ 
+ python test server.py
 ```
