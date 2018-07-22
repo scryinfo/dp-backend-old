@@ -170,7 +170,7 @@ class PublisherTest(unittest.TestCase):
             self.publish_data("airlines_duplicate.dat", "Airlines_listing.json")
 
         self.assertEqual(
-            {'FieldLength': [], 'IsPrimaryKey': [], 'IsNull': [['AirlineId', ['2', 2], ['3', 2]]], 'IsUnique': [['AirlineId', ['2', 2], ['3', 2]]], 'ForeignDataHash': [], 'DataType': []}
+            {'FieldLength': [], 'IsUnique': [['AirlineId', ['2', 2], ['3', 2]]], 'DataType': [], 'IsNull': [], 'ForeignDataHash': [], 'IsPrimaryKey': []}
             ,
             error.exception.response['error']
         )
