@@ -115,17 +115,6 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(ScryApi().categories(metadata=metadata), {'DataErrors': [['AirlineId', 'DataTypes', 'Int', "KeyError('DataTypes',)"]], 'Result': 'Metadata Error'}
                          )
 
-
-def search_keywords(keywords, searchtype, userpayload=test_credentials):
-    api = ScryApi()
-    api.login(userpayload)
-    payload = {
-        'keywords': keywords,
-        'searchtype' : searchtype
-        }
-    return api.search(payload)
-
-
 class PublisherTest(unittest.TestCase):
 
     def make_api(self):
@@ -223,34 +212,3 @@ class PublisherTest(unittest.TestCase):
 if __name__ == '__main__':
     initialize_categories()
     unittest.main()
-
-
-## SEARCH KEYWORDS FUNCTION HAS A BUG
-class SearchKeywordsTest(unittest.TestCase):
-    def setUp(self):
-        userpayload={'username':'22','password':'22'}
-        api = ScryApi()
-        api.login(**userpayload)
-
-        #Create category
-        metadata=json.load(open(meta_path+'Schedule_Metadata.json'))
-        metadata['CategoryName']=["Search Keywords"]
-        create_category(db,["Search Keywords"],metadata)
-
-        #Create Listing
-        f1=open(data_path+"schedule.csv",'rb')
-        f2= json.loads='{"category_name":["Search Keywords"],"price":1000,"filename":"Airlines_float.csv","keywords":"blabla"}'
-        files = {'data': f1,'listing_info':f2}
-        api.publisher(files=files)
-
-    def tearDown(self):
-        cat=Categories.get(Categories.name=='["Search Keywords"]')
-        cat_id=cat.id
-        db.execute_sql("""DELETE FROM scry2.listing WHERE "categoryId"={};""".format(cat_id))
-        db.execute_sql("""DELETE FROM scry2.categories WHERE name='["Search Keywords"]';""")
-
-    #WIP: "Charles" <chuck>
-    # def test_search_keywords(self):
-    #     print(search_keywords('blabla','["category","keywords"]'))
-    #
-    #     self.assertEqual(test_categories(publisher_path,scry_path,userpayload),'{"Result": "Category Created"}')

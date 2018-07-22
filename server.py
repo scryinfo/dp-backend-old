@@ -170,71 +170,10 @@ def  getcategories():
 
     return jsonify(cat_list)
 
-@app.route('/search_keywords',methods=['GET'])
-#@jwt_required()
-def search_keywords():
-    print("SEARCH KEYWORDS")
-    # keywords / category
-    searchtype = request.args.get('searchtype')
-    searchtype=json.loads(searchtype)
-
-    keywords = request.args.get('keywords')
-    keywords = keywords.replace(" "," & ")
-
-    print(searchtype)
-    query_type=''
-
-    ct=0
-    for s in searchtype:
-        ct+=1
-        if s=='keywords':
-            query_type+="to_tsvector(name)"
-        elif s=='category':
-            query_type+="to_tsvector(metadata->>'CategoryName')"
-        if ct != len(searchtype):
-            print(ct)
-            query_type+='||'
-
-
-    print('QUERY TYPE')
-    print(query_type)
-
-
-#    return 'a'
-
-    query="""
-        SELECT id
-        FROM scry2.listing as l
-        WHERE "categoryId" in
-          (
-          SELECT id
-          FROM scry2.categories
-         WHERE {} @@ to_tsquery('{}')
-          );
-        """.format(query_type,keywords)
-
-    db.close()
-    cursor = db.execute_sql('select id from scry2.listing;')
-
-    listing_ids=[]
-    listings=[]
-    for row in cursor.fetchall():
-        listing_ids.append(row[0])
-
-    if len(listing_ids)>0:
-        for l in listing_ids:
-            li = Listing.get(Listing.id == l)
-            listings.append(model_to_dict(li))
-
-    db.close()
-
-    return jsonify(listings)
-
 @app.route('/listing_by_categories',methods=['GET'])
 @jwt_required()
 def  listing_by_categories():
     cat_id = request.args.get('category_id')
-    print(cat_id)
 
     cat_list=[]
     for l in Listing.select().where(Listing.categoryId == cat_id):
