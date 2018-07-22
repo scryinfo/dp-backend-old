@@ -135,7 +135,6 @@ class PublisherTest(unittest.TestCase):
         return api.publisher(payload)
 
     def test_publish_with_no_jwt(self):
-        warnings.simplefilter("ignore")
         api = self.make_api()
         with self.assertRaises(ScryApiException):
             return api.publisher(self.make_publisher_default_payload(api))
@@ -151,8 +150,6 @@ class PublisherTest(unittest.TestCase):
             return api.publisher(self.make_publisher_default_payload(api))
 
     def test_null_in_not_null_column(self):
-        warnings.simplefilter("ignore")
-
         with self.assertRaises(ScryApiException) as error:
             self.publish_data(data_file="airlines_null.dat", listing_file="Airlines_listing.json")
 
@@ -164,8 +161,6 @@ class PublisherTest(unittest.TestCase):
 
 
     def test_Duplicates_in_Unique_Column(self):
-        warnings.simplefilter("ignore")
-
         with self.assertRaises(ScryApiException) as error:
             self.publish_data("airlines_duplicate.dat", "Airlines_listing.json")
 
@@ -176,7 +171,6 @@ class PublisherTest(unittest.TestCase):
         )
 
     def test_Float_and_String_in_int_Column(self):
-        warnings.simplefilter("ignore")
         with self.assertRaises(ScryApiException) as error:
             self.publish_data(data_file="airlines_int.dat", listing_file="Airlines_listing.json")
 
@@ -187,8 +181,6 @@ class PublisherTest(unittest.TestCase):
         )
 
     def test_String_in_float_Column(self):
-        warnings.simplefilter("ignore")
-
         with self.assertRaises(ScryApiException) as error:
             self.publish_data(data_file="airlines_float.dat", listing_file="Airlines_listing_float.json")
 
@@ -198,13 +190,11 @@ class PublisherTest(unittest.TestCase):
             )
 
     def test_insert_schedule_data_successfully(self):
-        warnings.simplefilter("ignore")
         self.assertEqual(
             self.publish_data(data_file="schedule.csv", listing_file="Schedule_listing.json"),
             "Success")
 
     def test_data_file_missing(self):
-        warnings.simplefilter("ignore")
         with self.assertRaises(ScryApiException) as error:
             self.publish_data(listing_file="Schedule_listing.json")
 
@@ -223,9 +213,7 @@ class PublisherTest(unittest.TestCase):
             ,{'text': "400 Bad Request: KeyError: 'listing_info'", 'error': 400}
             )
 
-
     def test_insert_schedule_data_successfully(self):
-        warnings.simplefilter("ignore")
         self.assertEqual(self.publish_data("schedule.csv", "Schedule_listing.json"),
                          {'message': 'Success'})
 

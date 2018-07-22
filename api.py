@@ -66,7 +66,13 @@ class ScryApi(object):
         return self._post('protected')
 
     def publisher(self, files):
-        return self._post('publisher', files=files)
+        try:
+            res = self._post('publisher', files=files)
+        finally:
+            #  TRICK: closes files opened by self.from_filenames_to_publisher_payload()
+            for f in files.values():
+                f.close()
+        return res
 
     def from_filenames_to_publisher_payload(self, data=None, listing_info=None):
         payload = {}
