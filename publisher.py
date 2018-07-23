@@ -92,63 +92,39 @@ def load_data(path,meta):
 
         return df
 
-# The following functions are used to test different aspect of the data
-def testInt(df,colname):
-    count=0
-    errors=[]
-    for i in df[colname]:
-        try:
-            int(i)
-        except ValueError:
-            errors.append(str(count))
-        count+=1
-    return errors
 
-def testFloat(df, colname):
-    print("TEST FLOAT")
-    count=0
-    errors=[]
-    for i in df[colname]:
-        try:
-            float(i)
-        except ValueError:
-            errors.append(str(count))
-        count+=1
-    return errors
+def test_standard_time(x):
+    return datetime.datetime.strptime(x,"%Y-%m-%dT%H:%M:%S")
 
+def test_int(x):
+    assert float(x) % 1.0 == 0
 
-
-def testStandardTime(df,colname):
-    count=0
-    errors=[]
-    for i in df[colname]:
-        try:
-            datetime.datetime.strptime(i,"%Y-%m-%dT%H:%M:%S")
-        except ValueError:
-            errors.append(count)
-        count+=1
-    return errors
+def test_type(x, func):
+    try:
+        func(x)
+        return True
+    except:
+        return False
 
 # Uses the above function to test data types
 def testDataType(df,colname,testValue):
-    if testValue=='Int':
-         testResult=testInt(df,colname)
+    d={
+        'Int' : test_int,
+        'Float': float,
+        'StandardTime' :test_standard_time,
+        'Date' : str,
+        'DateTime':str,
+        'String':str,
+        }
 
-    elif testValue=='Float':
-        testResult=testFloat(df,colname)
+    s=df[colname]
 
-    elif testValue=='StandardTime':
-        testResult=testStandardTime(df,[])
+    func=d[testValue]
 
-    elif testValue=='Date':
-        testResult=[]
-
-    elif testValue=='DateTime':
-        testResult=[]
-
+    if func==str:
+        return []
     else:
-        testResult=[]
-    return testResult
+        return  s[~s.apply(lambda x: test_type(x, func))].index.values
 
 def testIsNull(df,colname):
     errors=(list(df[df[colname].isnull()].index))
@@ -180,6 +156,7 @@ def testData(df,meta):
             elif test=='IsUnique':
                 tr=testIsUnique(df,colname)
             elif test=='IsNull' and testValue=='true':
+                tr=[]
                 testNull = False
             else:
                 tr=[]
