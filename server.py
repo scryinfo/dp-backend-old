@@ -3,7 +3,7 @@ from flask import Flask,request, jsonify,make_response, render_template, Respons
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
 from categories import create_category,validate_category
-from publisher import publish_data,getMetadata,fullTest, load_data, record_listing,add_file_to_IPFS
+from publisher import publish_data,getMetadata, load_data, record_listing,add_file_to_IPFS
 from model import db, Categories, Trader, Listing
 from peewee import IntegrityError,OperationalError,InternalError
 import simplejson
@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 import ipfsapi, os
 from playhouse.shortcuts import model_to_dict
 
-
+from test_data import full_test
 
 
 #from werkzeug.security import safe_str_cmp
@@ -75,15 +75,10 @@ def page_not_found(e):
 @app.route('/categories',methods=['POST'])
 #@jwt_required()
 def categories():
-    print("*******  PRINT JSON *************")
-    print(request.json)
-    print()
-
     if not request.is_json:
         return json.dumps({'Result': 'Not Json'})
 
     data=request.get_json()
-    print(data)
 
     try:
         test_data = validate_category(data['DataStructure'])
@@ -139,24 +134,27 @@ def  publisher():
     if df is None:
         return make_response(jsonify({'message':'Data file column number doesnt match metadata'}),422)
 
-    test_result, test_failed=fullTest (df, meta)
-    if test_failed == 1:
+    test_success, test_detail=full_test (df, meta['DataStructure'])
+
+    print(current_identity)
+    if test_success:
+        result = record_listing (db,
+            IPFS_hash,
+            current_identity,
+            filesize,
+            listing_info['filename'],
+            listing_info['price'],
+            json.dumps(listing_info['category_name']),
+            listing_info['keywords'])
+
+        return make_response(simplejson.dumps({'message':'Success'}, ignore_nan=True), 200) # Simple json is used to handle Nan values in test result numpy array TestIsNull
+    else:
         return make_response(simplejson.dumps({
             'message':'test failed',
-            'error': test_result
+            'error': test_detail
             }, ignore_nan=True, sort_keys=True
             ), 422)
 
-    result = record_listing (db,
-        IPFS_hash,
-        current_identity,
-        filesize,
-        listing_info['filename'],
-        listing_info['price'],
-        json.dumps(listing_info['category_name']),
-        listing_info['keywords'])
-
-    return make_response(simplejson.dumps({'message': result}, ignore_nan=True), 200) # Simple json is used to handle Nan values in test result numpy array TestIsNull
 
 @app.route('/getcategories',methods=['GET'])
 @jwt_required()

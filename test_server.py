@@ -155,10 +155,10 @@ class PublisherTest(unittest.TestCase):
         with self.assertRaises(ScryApiException) as error:
             self.publish_data(data="airlines_null.dat", listing_info="Airlines_listing.json")
 
-
         self.assertEqual(
                 error.exception.response['error'],
-                {'IsUnique': [], 'IsNull': [['IATA', ['2', None]], ['ICAO', ['0', None], ['1', None]], ['Callsign', ['1', None]], ['Country', ['1', None]]], 'DataType': [], 'FieldLength': [], 'IsPrimaryKey': [], 'ForeignDataHash': []}
+                [{'IATA': [{'IsNull': [['2', None]]}]}, {'ICAO': [{'IsNull': [['0', None], ['1', None]]}]}, {'Callsign': [{'IsNull': [['1', None]]}]}, {'Country': [{'IsNull': [['1', None]]}]}]
+
             )
 
 
@@ -167,20 +167,18 @@ class PublisherTest(unittest.TestCase):
             self.publish_data("airlines_duplicate.dat", "Airlines_listing.json")
 
         self.assertEqual(
-            {'FieldLength': [], 'IsUnique': [['AirlineId', ['2', 2], ['3', 2]]], 'DataType': [], 'IsNull': [], 'ForeignDataHash': [], 'IsPrimaryKey': []}
-            ,
-            error.exception.response['error']
+            error.exception.response['error'],
+            [{'AirlineId': [{'IsUnique': [['2', 2], ['3', 2]]}]}]
         )
+
 
     def test_Float_and_String_in_int_Column(self):
         with self.assertRaises(ScryApiException) as error:
             self.publish_data(data="airlines_int.dat", listing_info="Airlines_listing.json")
 
-        self.assertEqual(
-        error.exception.response['error']
-        ,
-        {'ForeignDataHash': [], 'IsNull': [], 'IsUnique': [], 'FieldLength': [], 'DataType': [['AirlineId', ['1', '1.1'], ['2', '2a']]], 'IsPrimaryKey': []}
-        )
+        self.assertEqual(error.exception.response['error']
+        ,[{'AirlineId': [{'DataType': [['1', '1.1'], ['2', '2a']]}]}])
+
 
     def test_String_in_float_Column(self):
         with self.assertRaises(ScryApiException) as error:
@@ -188,13 +186,9 @@ class PublisherTest(unittest.TestCase):
 
         self.assertEqual(
                 error.exception.response['error'],
-                {'FieldLength': [], 'IsUnique': [], 'IsPrimaryKey': [], 'ForeignDataHash': [], 'DataType': [['AirlineId', ['2', '2a']]], 'IsNull': []}
+                [{'AirlineId': [{'DataType': [['2', '2a']]}]}]
             )
 
-    def test_insert_schedule_data_successfully(self):
-        self.assertEqual(
-            self.publish_data(data="schedule.csv", listing_info="Schedule_listing.json"),
-            "Success")
 
     def test_data_file_missing(self):
         with self.assertRaises(ScryApiException) as error:
@@ -217,7 +211,7 @@ class PublisherTest(unittest.TestCase):
 
     def test_insert_schedule_data_successfully(self):
         self.assertEqual(self.publish_data("schedule.csv", "Schedule_listing.json"),
-                         {'message': 'Success'})
+        {'message': 'Success'})
 
 
 if __name__ == '__main__':
