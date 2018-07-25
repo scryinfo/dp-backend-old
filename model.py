@@ -59,6 +59,16 @@ class Listing(Model):
         schema = 'scry2'
 
 
+class CategoryTree(Model):
+    parent_id = IntegerField()#ForeignKeyField('self', db_column='parent_id',related_name='children',null=True),
+    name = CharField()
+
+    class Meta:
+        database = db
+        schema='scry2'
+        db_table = 'category_tree'
+
+
 def create_tables():
     db.connect()
     db.create_tables([Category,Trader,Listing,Category])

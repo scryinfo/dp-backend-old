@@ -1,7 +1,9 @@
-from model import db, Categories
+from model import db, Categories, CategoryTree
 import json
 from peewee import IntegrityError,OperationalError,InternalError
 from flask import jsonify
+import peewee as pe
+
 
 # receives a dictionary "meta" in the python format ex : {'a':'a'}
 # postgresql transforms it into jsonb format {"a":"a"}
@@ -65,6 +67,40 @@ class Column(object):
         #     raise Exception("No test for this format yet")
         #
 
+
+class CustomPeeweeError(Exception):
+    def __init__(self, message):
+        super(CustomPeeweeError, self).__init__('Custom peewee error')
+        self.message = message
+
+def create_cat_tree(name, parent_id=None):
+    try:
+        cat = CategoryTree.create(name=name, parent_id=parent_id)
+        return cat
+#        cat.delete_instance()
+    except pe.InternalError as e:
+        a = e.__context__.pgerror
+        if a[0:38] == 'ERROR:  Name exists for this parent_id':
+            print('UNIQUE CONSTRAINT : Name already exists for this parent_id')
+        error='unique'
+    except pe.IntegrityError as e2:
+        print('FOREIGN KEY : Parent_id value doesnt exist')
+    except:
+        print("W")
+    db.close()
+    raise CustomPeeweeError('unique')
+
+
+def delete_cat_tree(cat_id):
+    try:
+        cat = CategoryTree.get(CategoryTree.id == cat_id)
+        cat.delete_instance()
+        print('Category deleted')
+    except IntegrityError:
+        print("Dependent Categories")
+    except:
+        print('Category doesnt exist')
+    db.close()
 
 
 if __name__ == '__main__':

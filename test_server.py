@@ -3,9 +3,9 @@ import pandas as pd
 import numpy as np
 from api import ScryApiException, ScryApi
 from test_data import *
-from categories import create_category
-from model import db, Categories
-
+from categories import create_category, create_cat_tree, delete_cat_tree, CustomPeeweeError
+from model import db, Categories, CategoryTree
+import peewee as pe
 
 meta_path = './demo/metadata/'
 
@@ -274,6 +274,32 @@ class DataTest(unittest.TestCase):
             full_test(df, meta),
             (True, [])
             )
+
+class CategoryTest(unittest.TestCase):
+
+    def setUp(self):
+        cat = create_cat_tree('Test')
+        cat2 = create_cat_tree('Test2',cat.id)
+        cat3 = create_cat_tree('Test3',cat.id)
+
+
+    def tearDown(self):
+        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Test3').id)
+        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Test2').id)
+        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Test').id)
+
+    def test_already_exist_without_parent_id(self):
+        with self.assertRaises(CustomPeeweeError) as error:
+            create_cat_tree('Test')
+        db.close()
+
+        print("++++++++++++++++")
+        print(error)
+
+    def test_already_exist_with_parent_id(self):
+        with self.assertRaises(CustomPeeweeError) as error:
+            create_cat_tree('Test2',CategoryTree.get(CategoryTree.name == 'Test').id)
+        db.close()
 
 
 if __name__ == '__main__':

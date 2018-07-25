@@ -36,15 +36,3 @@ DROP TRIGGER IF EXISTS category_verify_name ON scry2.category_tree;
 
 CREATE TRIGGER category_verify_name BEFORE INSERT OR UPDATE ON scry2.category_tree
     FOR EACH ROW EXECUTE PROCEDURE scry2.category_verify_name();
-
-
-INSERT INTO scry2.category_tree (name) VALUES('Aviation');
-
-INSERT INTO scry2.category_tree (name, parent_id) VALUES('Commercial',1);
-
-INSERT INTO scry2.category_tree (name, parent_id) VALUES('Private',1);
-
-INSERT INTO scry2.category_tree (name, parent_id) VALUES('Airport',2);
-
-
-INSERT INTO scry2.category_tree (name, parent_id) VALUES('ROOT',4);
