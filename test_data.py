@@ -44,18 +44,18 @@ def testDataType(s, testValue):
     if func==str:
         return []
     else:
-        return s[~s.apply(lambda x: test_type(x, func))].astype('object')
+        return s[~s.apply(lambda x: test_type(x, func))]
 
 
 def testIsNull(s):
-    errors=s[s.isnull()].astype('object')
+    errors=s[s.isnull()]
     return errors
 
 
 def testIsUnique(s):
     dup = s[s.duplicated(keep=False)]
     dup = dup[dup.notnull()] # Eliminate duplicated "Nulls"vprint(errors)
-    return dup.astype('object')
+    return dup
 
 
 def serie_to_list(s):
@@ -75,12 +75,12 @@ def test_column(s,meta):
         elif i=='IsUnique':
             tr=testIsUnique(s)
         if len(tr)>0:
-            test_result.append({i:serie_to_list(tr)})
+            test_result.append({i:serie_to_list(tr.fillna('nan').astype('object'))})
             tr=[]
     if not bool(meta.get('IsNull')):
         tr=testIsNull(s)
         if len(tr)>0:
-            test_result.append({'IsNull':serie_to_list(tr)})
+            test_result.append({'IsNull':serie_to_list(tr.fillna('nan').astype('object'))})
         tr=[]
 
     return(test_result)
