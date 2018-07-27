@@ -70,7 +70,7 @@ class Column(object):
 
 class CustomPeeweeError(Exception):
     def __init__(self, message):
-        super(CustomPeeweeError, self).__init__('Custom peewee error')
+        super(CustomPeeweeError, self).__init__('Custom peewee errors')
         self.message = message
 
 def create_cat_tree(name, parent_id=None):
@@ -101,6 +101,24 @@ def delete_cat_tree(cat_id):
     except:
         print('Category doesnt exist')
     db.close()
+
+def get_child_id(id):
+    cat = CategoryTree.get(id=id)
+    return model_to_dict(cat, backrefs=True)
+
+
+def get_all(inp):
+    '''Receive an array of category ids as an input ex : [1], [2,3]'''
+    if inp == []:
+        return []
+    arr=[]
+    for i in inp:
+        c = get_child_id(i)
+        children_id = []
+        for x in c['children']:
+            children_id.append(x['id'])
+        arr.append({'name': c['name'], 'id': c['id'], 'children': get_all(children_id)})
+    return arr
 
 
 if __name__ == '__main__':
