@@ -218,6 +218,8 @@ class DataTest(unittest.TestCase):
 
     df  = pd.DataFrame(data={'col1': ['a', 1,np.nan,np.nan], 'col2': [1, 'a',1,2.2]})
 
+    df_valid= pd.DataFrame(data={'col1': [2, 1], 'col2': [1, 2]})
+
     meta=[{"col1":{"DataType": "Int","IsUnique": "true"}},
          {"col2":{"DataType": "Int","IsUnique": "true"}}]
 
@@ -259,6 +261,24 @@ class DataTest(unittest.TestCase):
             test_column(df['col1'],{"DataType": "Int","IsUnique": "true"})
             ,[{'DataType': [[0, 'a'], [2, 'nan'], [3, 'nan']]}, {'IsNull': [[2, 'nan'], [3, 'nan']]}])
 
+    def test_dataframe(self):
+        self.assertEqual(test_dataframe(self.df_valid, self.meta),
+                          [])
+
+    def test_dataframe_too_few_meta(self):
+        # TODO: Charles can you confirm this behaviour is expected or should we improve test_data_frame?
+        self.assertEqual(test_dataframe(self.df_valid, self.meta[:1]),
+                          [])
+
+    def test_dataframe_too_many_meta(self):
+        # TODO: Charles can you confirm this behaviour is expected or should we improve test_data_frame?
+        self.assertEqual(test_dataframe(self.df_valid[['col1']], self.meta),
+                          [])
+
+    def test_dataframe_incorrect_column_name(self):
+        # TODO: Charles can you confirm this behaviour is expected or should we improve test_data_frame?
+        self.assertEqual(test_dataframe(self.df_valid.rename(columns={'col1': 'wrongname'}), self.meta),
+                          [])
 
     def test_all_tests_for_dataframe_with_errors(self, df=df, meta=meta):
         self.assertEqual(

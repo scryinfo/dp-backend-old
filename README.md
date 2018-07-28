@@ -17,11 +17,17 @@ python server.py
 ### Pre-requisite install scry.
  Follow the repo https://github.com/scryInfo/scry/ to install full system.
  
-### Testing
+### Integration Testing
 open the front end
 create a user with login=22 password=22
 ```
  python -m demo.demo_publisher
  
  python test server.py
+```
+
+### Unit Testing
+For now there is only 1 unit test class
+```
+python -m unittest -v test_server.DataTest
 ```
