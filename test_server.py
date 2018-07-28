@@ -255,6 +255,9 @@ class DataTest(unittest.TestCase):
             serie_to_list (testDataType(s,'StandardTime'))
             ,[[1, '2018-07-06 23:45:43'], [2, '2018-07-06T24:45:43']])
 
+    def test_column_is_not_unique(self):
+        self.assertEqual(test_column(pd.Series([1, 1]), {"DataType": "Int", "IsUnique": "false"}),
+                         [])
 
     def test_all_tests_for_column(self,df=df):
         self.assertEqual(

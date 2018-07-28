@@ -29,7 +29,7 @@ def test_type(x, func):
 
 
 # Uses the above function to test data types
-def testDataType(s, testValue):
+def testDataType(s, data_type):
     d={
         'Int' : test_int,
         'Float': float,
@@ -39,7 +39,7 @@ def testDataType(s, testValue):
         'String':str,
         }
 
-    func=d[testValue]
+    func=d[data_type]
 
     if func==str:
         return []
@@ -47,12 +47,16 @@ def testDataType(s, testValue):
         return s[~s.apply(lambda x: test_type(x, func))]
 
 
-def testIsNull(s):
+def testIsNull(s, dont_ignore_test='true'):
+    if not str_to_bool(dont_ignore_test):
+        return pd.Series()
     errors=s[s.isnull()]
     return errors
 
 
-def testIsUnique(s):
+def testIsUnique(s, dont_ignore_test='true'):
+    if not str_to_bool(dont_ignore_test):
+        return pd.Series()
     dup = s[s.duplicated(keep=False)]
     dup = dup[dup.notnull()] # Eliminate duplicated "Nulls"vprint(errors)
     return dup
@@ -65,29 +69,34 @@ def serie_to_list(s):
     return l
 
 
-def test_column(s,meta):
-    test_result=[]
-    tr=[]
-    for i in meta:
-        testValue=meta[i]
-        if i=='DataType':
-            tr=testDataType(s,meta[i])
-        elif i=='IsUnique':
-            tr=testIsUnique(s)
-        if len(tr)>0:
-            test_result.append({i:serie_to_list(tr.fillna('nan').astype('object'))})
-            tr=[]
-    if not bool(meta.get('IsNull')):
-        tr=testIsNull(s)
-        if len(tr)>0:
-            test_result.append({'IsNull':serie_to_list(tr.fillna('nan').astype('object'))})
-        tr=[]
+def test_column(s, meta):
+    d = {
+        'DataType': testDataType,
+        'IsUnique': testIsUnique,
+        'IsNull': testIsNull,
+        'IsPrimaryKey': lambda x, y: [],  # Not implemented
+        'FieldLength': lambda x, y: [],  # Not implemented
+    }
 
-    return(test_result)
+    meta = dict(meta)
+    meta.setdefault('IsNull', 'true')  # TRICK: We need to run IsNull by default even if the key is not set.
+
+    test_result = []
+    for key, value in meta.items():
+        tr = d[key](s, value)
+        if len(tr) == 0:
+            continue
+        test_result.append({key: serie_to_list(tr.fillna('nan').astype('object'))})
+
+    return test_result
+
+
+def str_to_bool(value):
+    return dict(false=False, true=True)[value]
 
 
 def test_dataframe(df, meta):
-    test_result=[]
+    test_result = []
     for i, j in zip(df.columns, meta):
         tr=test_column(df[i], list(j.values())[0])
         if len(tr)>0:
