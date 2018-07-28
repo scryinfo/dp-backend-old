@@ -1,9 +1,8 @@
-import json, os
-import unittest
-import warnings
-
+import json, os, unittest, warnings
+import pandas as pd
+import numpy as np
 from api import ScryApiException, ScryApi
-
+from test_data import *
 from categories import create_category
 from model import db, Categories
 
@@ -144,10 +143,10 @@ class PublisherTest(unittest.TestCase):
         with self.assertRaises(ScryApiException) as error:
             self.publish_data(data="airlines_null.dat", listing_info="Airlines_listing.json")
 
-
         self.assertEqual(
                 error.exception.response['error'],
-                {'IsUnique': [], 'IsNull': [['IATA', ['2', None]], ['ICAO', ['0', None], ['1', None]], ['Callsign', ['1', None]], ['Country', ['1', None]]], 'DataType': [], 'FieldLength': [], 'IsPrimaryKey': [], 'ForeignDataHash': []}
+                [{'IATA': [{'IsNull': [['2', 'nan']]}]}, {'ICAO': [{'IsNull': [['0', 'nan'], ['1', 'nan']]}]}, {'Callsign': [{'IsNull': [['1', 'nan']]}]}, {'Country': [{'IsNull': [['1', 'nan']]}]}]
+
             )
 
 
@@ -156,20 +155,18 @@ class PublisherTest(unittest.TestCase):
             self.publish_data("airlines_duplicate.dat", "Airlines_listing.json")
 
         self.assertEqual(
-            {'FieldLength': [], 'IsUnique': [['AirlineId', ['2', 2], ['3', 2]]], 'DataType': [], 'IsNull': [], 'ForeignDataHash': [], 'IsPrimaryKey': []}
-            ,
-            error.exception.response['error']
+            error.exception.response['error'],
+            [{'AirlineId': [{'IsUnique': [['2', 2], ['3', 2]]}]}]
         )
+
 
     def test_Float_and_String_in_int_Column(self):
         with self.assertRaises(ScryApiException) as error:
             self.publish_data(data="airlines_int.dat", listing_info="Airlines_listing.json")
 
-        self.assertEqual(
-        error.exception.response['error']
-        ,
-        {'ForeignDataHash': [], 'IsNull': [], 'IsUnique': [], 'FieldLength': [], 'DataType': [['AirlineId', ['1', '1.1'], ['2', '2a']]], 'IsPrimaryKey': []}
-        )
+        self.assertEqual(error.exception.response['error']
+        ,[{'AirlineId': [{'DataType': [['1', '1.1'], ['2', '2a']]}]}])
+
 
     def test_String_in_float_Column(self):
         with self.assertRaises(ScryApiException) as error:
@@ -177,13 +174,9 @@ class PublisherTest(unittest.TestCase):
 
         self.assertEqual(
                 error.exception.response['error'],
-                {'FieldLength': [], 'IsUnique': [], 'IsPrimaryKey': [], 'ForeignDataHash': [], 'DataType': [['AirlineId', ['2', '2a']]], 'IsNull': []}
+                [{'AirlineId': [{'DataType': [['2', '2a']]}]}]
             )
 
-    def test_insert_schedule_data_successfully(self):
-        self.assertEqual(
-            self.publish_data(data="schedule.csv", listing_info="Schedule_listing.json"),
-            "Success")
 
     def test_data_file_missing(self):
         with self.assertRaises(ScryApiException) as error:
@@ -206,7 +199,93 @@ class PublisherTest(unittest.TestCase):
 
     def test_insert_schedule_data_successfully(self):
         self.assertEqual(self.publish_data("schedule.csv", "Schedule_listing.json"),
-                         {'message': 'Success'})
+        {'message': 'Success'})
+
+
+
+class DataTest(unittest.TestCase):
+
+    df  = pd.DataFrame(data={'col1': ['a', 1,np.nan,np.nan], 'col2': [1, 'a',1,2.2]})
+
+    df_valid= pd.DataFrame(data={'col1': [2, 1], 'col2': [1, 2]})
+
+    meta=[{"col1":{"DataType": "Int","IsUnique": "true"}},
+         {"col2":{"DataType": "Int","IsUnique": "true"}}]
+
+
+    def test_is_null(self,df=df):
+        self.assertEqual(
+            serie_to_list (testIsNull(df['col1']).fillna(''))
+            ,[[2, ''], [3, '']])
+
+
+    def test_is_unique(self,df=df):
+        self.assertEqual(
+            serie_to_list (testIsUnique(df['col2']))
+            ,[[0, 1], [2, 1]])
+
+
+    def test_is_int(self,df=df):
+        self.assertEqual(
+            serie_to_list (testDataType(df['col2'],'Int'))
+            ,[[1, 'a'], [3, 2.2]])
+
+
+    def test_is_float(self,df=df):
+        self.assertEqual(
+            serie_to_list (testDataType(df['col2'],'Float'))
+            ,[[1, 'a']])
+
+
+    def test_standard(self):
+        s=pd.Series(['2018-07-06T23:45:43','2018-07-06 23:45:43','2018-07-06T24:45:43'])
+
+        self.assertEqual(
+            serie_to_list (testDataType(s,'StandardTime'))
+            ,[[1, '2018-07-06 23:45:43'], [2, '2018-07-06T24:45:43']])
+
+    def test_column_is_not_unique(self):
+        self.assertEqual(test_column(pd.Series([1, 1]), {"DataType": "Int", "IsUnique": "false"}),
+                         [])
+
+    def test_all_tests_for_column(self,df=df):
+        self.assertEqual(
+            test_column(df['col1'],{"DataType": "Int","IsUnique": "true"})
+            ,[{'DataType': [[0, 'a'], [2, 'nan'], [3, 'nan']]}, {'IsNull': [[2, 'nan'], [3, 'nan']]}])
+
+    def test_dataframe(self):
+        self.assertEqual(test_dataframe(self.df_valid, self.meta),
+                          [])
+
+    def test_dataframe_too_few_meta(self):
+        # TODO: Charles can you confirm this behaviour is expected or should we improve test_data_frame?
+        self.assertEqual(test_dataframe(self.df_valid, self.meta[:1]),
+                          [])
+
+    def test_dataframe_too_many_meta(self):
+        # TODO: Charles can you confirm this behaviour is expected or should we improve test_data_frame?
+        self.assertEqual(test_dataframe(self.df_valid[['col1']], self.meta),
+                          [])
+
+    def test_dataframe_incorrect_column_name(self):
+        # TODO: Charles can you confirm this behaviour is expected or should we improve test_data_frame?
+        self.assertEqual(test_dataframe(self.df_valid.rename(columns={'col1': 'wrongname'}), self.meta),
+                          [])
+
+    def test_all_tests_for_dataframe_with_errors(self, df=df, meta=meta):
+        self.assertEqual(
+            full_test(df, meta),
+            (False, [{'col1': [{'DataType': [[0, 'a'], [2, 'nan'], [3, 'nan']]}, {'IsNull': [[2, 'nan'], [3, 'nan']]}]}, {'col2': [{'DataType': [[1, 'a'], [3, 2.2]]}, {'IsUnique': [[0, 1], [2, 1]]}]}])
+            )
+
+
+    def test_all_tests_for_dataframe_all_tests_pass_without_error(self, df=df, meta=meta):
+        df  = pd.DataFrame(data={'col1': [2, 1,3,4], 'col2': [1, 2,3,4]})
+
+        self.assertEqual(
+            full_test(df, meta),
+            (True, [])
+            )
 
 
 if __name__ == '__main__':
