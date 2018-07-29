@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from api import ScryApiException, ScryApi
 from test_data import *
-from categories import create_category, create_cat_tree, delete_cat_tree, CustomPeeweeError
+from categories import create_category, create_cat_tree,   delete_cat_tree, CustomPeeweeError
 from model import db, Categories, CategoryTree
 import peewee as pe
 
@@ -278,27 +278,25 @@ class DataTest(unittest.TestCase):
 class CategoryTest(unittest.TestCase):
 
     def setUp(self):
-        cat = create_cat_tree('Test')
-        cat2 = create_cat_tree('Test2',cat.id)
-        cat3 = create_cat_tree('Test3',cat.id)
+
+        cat = create_cat_tree('Parent1')
+        cat2 = create_cat_tree('Child1',cat.id)
+        cat3 = create_cat_tree('Child2',cat.id)
 
 
     def tearDown(self):
-        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Test3').id)
-        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Test2').id)
-        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Test').id)
+        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Child1').id)
+        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Child2').id)
+        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Parent1').id)
 
     def test_already_exist_without_parent_id(self):
         with self.assertRaises(CustomPeeweeError) as error:
-            create_cat_tree('Test')
+            a=  create_cat_tree('Parent1')
         db.close()
-
-        print("++++++++++++++++")
-        print(error)
 
     def test_already_exist_with_parent_id(self):
         with self.assertRaises(CustomPeeweeError) as error:
-            create_cat_tree('Test2',CategoryTree.get(CategoryTree.name == 'Test').id)
+            create_cat_tree('Child1',CategoryTree.get(CategoryTree.name == 'Parent1').id)
         db.close()
 
 
@@ -309,7 +307,6 @@ if __name__ == '__main__':
 
 ## SEARCH KEYWORDS FUNCTION HAS A BUG
 class SearchKeywordsTest(unittest.TestCase):
-    def setUp(self):
         userpayload={'username':'22','password':'22'}
         api = ScryApi()
         api.login(**userpayload)

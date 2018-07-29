@@ -59,10 +59,19 @@ class Listing(Model):
         schema = 'scry2'
 
 
-class CategoryTree(Model):
-    parent_id = IntegerField()#ForeignKeyField('self', db_column='parent_id',related_name='children',null=True),
-    name = CharField()
+# class CategoryTree(Model):
+# #    parent_id = IntegerField()
+#     parent_id = ForeignKeyField('self',related_name='children',null=True),
+#     name = CharField()
+#
+#     class Meta:
+#         database = db
+#         schema='scry2'
+#         db_table = 'category_tree'
 
+class CategoryTree(Model):
+    name = CharField()
+    parent = ForeignKeyField('self', null=True, backref='children')
     class Meta:
         database = db
         schema='scry2'
@@ -71,11 +80,11 @@ class CategoryTree(Model):
 
 def create_tables():
     db.connect()
-    db.create_tables([Category,Trader,Listing,Category])
+    db.create_tables([Categories,Trader,Listing, CategoryTree])
     db.close()
 
 
-#create_tables()
+create_tables()
 
 def test_create_categories():
     #catname=["FF"]

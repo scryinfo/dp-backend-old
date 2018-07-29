@@ -106,9 +106,19 @@ def get_child_id(id):
     cat = CategoryTree.get(id=id)
     return model_to_dict(cat, backrefs=True)
 
+def get_parent_id_null():
+    query = CategoryTree.select().where(CategoryTree.parent_id.is_null())
+    arr = []
+    for i in query:
+        arr.append(i.id)
+    return arr
+
 
 def get_all(inp):
     '''Receive an array of category ids as an input ex : [1], [2,3]'''
+
+    if inp == [None]:
+        get_parent_id_null()
     if inp == []:
         return []
     arr=[]
@@ -119,6 +129,7 @@ def get_all(inp):
             children_id.append(x['id'])
         arr.append({'name': c['name'], 'id': c['id'], 'children': get_all(children_id)})
     return arr
+
 
 
 if __name__ == '__main__':
