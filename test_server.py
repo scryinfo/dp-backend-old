@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from api import ScryApiException, ScryApi, publisher_url, scry_url
 from test_data import *
-from categories import create_category, create_cat_tree,  delete_cat_tree, CustomPeeweeError, get_all, remove_ids_rec
+from categories import create_category, create_cat_tree,  delete_cat_tree, CustomPeeweeError, get_all, remove_ids_rec, sort_all
 from model import db, Categories, CategoryTree
 import peewee as pe
 import requests
@@ -276,7 +276,6 @@ class DataTest(unittest.TestCase):
             )
 
 class CategoryTest(unittest.TestCase):
-
     def get_header(self, credentials):
         r = requests.post(scry_url+'login', json = credentials)
         headers = {"Authorization": "JWT "+json.loads(r.text)['token']}
@@ -288,12 +287,12 @@ class CategoryTest(unittest.TestCase):
         return r.text
 
     def setUp(self):
-        cat = create_cat_tree('Parent1')
-        cat2 = create_cat_tree('Child1',cat.id)
-        cat3 = create_cat_tree('Child2',cat.id)
-        cat4 = create_cat_tree('Child3',cat2.id)
-        cat4 = create_cat_tree('Child4',cat2.id)
-        cat = create_cat_tree('Parent2')
+        cat = create_cat_tree('Parent1',None,{})
+        cat2 = create_cat_tree('Child1',cat.id,{})
+        cat3 = create_cat_tree('Child2',cat.id,{})
+        cat4 = create_cat_tree('Child3',cat2.id,{})
+        cat4 = create_cat_tree('Child4',cat2.id,{})
+        cat = create_cat_tree('Parent2',None,{})
 
 
     def tearDown(self):
@@ -306,31 +305,40 @@ class CategoryTest(unittest.TestCase):
 
     def test_already_exist_without_parent_id(self):
         with self.assertRaises(CustomPeeweeError) as error:
-            a=  create_cat_tree('Parent1')
+            a=  create_cat_tree('Parent1',None,{})
         db.close()
 
     def test_already_exist_with_parent_id(self):
         with self.assertRaises(CustomPeeweeError) as error:
-            create_cat_tree('Child1',CategoryTree.get(CategoryTree.name == 'Parent1').id)
+            create_cat_tree('Child1',CategoryTree.get(CategoryTree.name == 'Parent1').id,{})
         db.close()
 
     def test_api_get_all_categories(self):
-        d = get_all([CategoryTree.get(CategoryTree.name == 'Parent1').id])
+        self.maxDiff = None
 
+        d =remove_ids_rec( get_all([CategoryTree.get(CategoryTree.name == 'Parent1').id])[0])
+        d = sort_all([d])
+
+        print(d)
         self.assertEqual(
-            remove_ids_rec(d[0]),
-            {'name': 'Parent1', 'children': [{'name': 'Child1', 'children': [{'name': 'Child3', 'children': []}, {'name': 'Child4', 'children': []}]}, {'name': 'Child2', 'children': []}]})
+            d,[{'children': [{'children': [{'children': [], 'name': 'Child3'}, {'children': [], 'name': 'Child4'}], 'name': 'Child1'}, {'children': [], 'name': 'Child2'}], 'name': 'Parent1'}]
+            )
 
 
-    def test_api_get_all_categories(self):
+    def test_api_get_all_categories_none(self):
+        self.maxDiff = None
+
         d = get_all([None])
         for i in d:
             if i['name'] == 'Parent1':
                 break
+        i = remove_ids_rec(i)
+        i = sort_all([i])
 
         self.assertEqual(
-            remove_ids_rec(i),
-            {'name': 'Parent1', 'children': [{'name': 'Child1', 'children': [{'name': 'Child3', 'children': []}, {'name': 'Child4', 'children': []}]}, {'name': 'Child2', 'children': []}]})
+            i, [{'children': [{'children': [{'children': [], 'name': 'Child3'}, {'children': [], 'name': 'Child4'}], 'name': 'Child1'}, {'children': [], 'name': 'Child2'}], 'name': 'Parent1'}]
+            )
+
 
 
 
@@ -356,11 +364,11 @@ class SearchKeywordsTest(unittest.TestCase):
         files = {'data': f1,'listing_info':f2}
         api.publisher(files=files)
 
-    def tearDown(self):
-        cat=Categories.get(Categories.name=='["Search Keywords"]')
-        cat_id=cat.id
-        db.execute_sql("""DELETE FROM scry2.listing WHERE "categoryId"={};""".format(cat_id))
-        db.execute_sql("""DELETE FROM scry2.categories WHERE name='["Search Keywords"]';""")
+        def tearDown(self):
+            cat=Categories.get(Categories.name=='["Search Keywords"]')
+            cat_id=cat.id
+            db.execute_sql("""DELETE FROM scry2.listing WHERE "categoryId"={};""".format(cat_id))
+            db.execute_sql("""DELETE FROM scry2.categories WHERE name='["Search Keywords"]';""")
 
     #WIP: "Charles" <chuck>
     # def test_search_keywords(self):

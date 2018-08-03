@@ -72,6 +72,7 @@ class Listing(Model):
 class CategoryTree(Model):
     name = CharField()
     parent = ForeignKeyField('self', null=True, backref='children')
+    metadata =  BinaryJSONField()
     class Meta:
         database = db
         schema='scry2'

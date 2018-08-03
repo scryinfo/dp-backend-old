@@ -7,11 +7,11 @@ import peewee as pe
 
 # receives a dictionary "meta" in the python format ex : {'a':'a'}
 # postgresql transforms it into jsonb format {"a":"a"}
-def create_category(db,catname,meta):
+def create_category(db, catname, parent_id,meta):
     try:
         db.close()
         db.connect()
-        cat = Categories.create(name=json.dumps(catname), metadata=meta)
+        cat = CategoryTree.create(name=json.dumps(catname), parent_id = parent_id, metadata=meta)
         cat.save()
         db.close()
     except:
@@ -73,11 +73,10 @@ class CustomPeeweeError(Exception):
         super(CustomPeeweeError, self).__init__('Custom peewee errors')
         self.message = message
 
-def create_cat_tree(name, parent_id=None):
+def create_cat_tree(name, parent_id, meta):
     try:
-        cat = CategoryTree.create(name=name, parent_id=parent_id)
+        cat = CategoryTree.create(name = name, parent_id = parent_id, metadata = meta)
         return cat
-#        cat.delete_instance()
     except pe.InternalError as e:
         a = e.__context__.pgerror
         if a[0:38] == 'ERROR:  Name exists for this parent_id':
@@ -140,6 +139,29 @@ def remove_ids_rec(d):
         for i in d['children']:
             arr.append(remove_ids_rec(i))
     return d
+
+def sort_json_2(arr):
+    i = 1
+    while i < len(arr):
+        j = i
+        while j > 0 and arr[j-1]['name'] > arr[j]['name']:
+            arr[j], arr[j-1] = arr[j-1], arr[j]
+            j = j - 1
+        i = i + 1
+    return arr
+
+def sort_all(arr):
+    ''' sorts result of category category by name'''
+    if arr == []:
+        return arr
+
+    if len(arr)>1:
+        arr = sort_json_2(arr)
+
+    arr2=[]
+    for i in arr:
+        arr2.append({'name': i['name'], 'children': sort_all(i['children'])})
+    return arr2
 
 
 if __name__ == '__main__':
