@@ -1,4 +1,4 @@
-from model import db, Categories, CategoryTree
+from model import *
 import json
 from peewee import IntegrityError,OperationalError,InternalError
 from flask import jsonify
@@ -115,10 +115,12 @@ def get_parent_id_null():
 
 
 def get_all(inp):
-    '''Receive an array of category ids as an input ex : [1], [2,3]'''
-
+    '''Receive an array of category ids as an input ex : [1], [2,3]
+       To get whole database info pass [None] as argument
+    '''
+    print(inp)
     if inp == [None]:
-        get_parent_id_null()
+        inp = get_parent_id_null()
     if inp == []:
         return []
     arr=[]
@@ -130,6 +132,14 @@ def get_all(inp):
         arr.append({'name': c['name'], 'id': c['id'], 'children': get_all(children_id)})
     return arr
 
+def remove_ids_rec(d):
+    ''' Receives a dictionary with structure with three keys 'id','name','children'''
+    d.pop('id')
+    if len(d['children'])>0:
+        arr=[]
+        for i in d['children']:
+            arr.append(remove_ids_rec(i))
+    return d
 
 
 if __name__ == '__main__':

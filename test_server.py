@@ -1,14 +1,14 @@
 import json, os, unittest, warnings
 import pandas as pd
 import numpy as np
-from api import ScryApiException, ScryApi
+from api import ScryApiException, ScryApi, publisher_url, scry_url
 from test_data import *
-from categories import create_category, create_cat_tree,   delete_cat_tree, CustomPeeweeError
+from categories import create_category, create_cat_tree,  delete_cat_tree, CustomPeeweeError, get_all, remove_ids_rec
 from model import db, Categories, CategoryTree
 import peewee as pe
+import requests
 
 meta_path = './demo/metadata/'
-
 
 test_credentials = {'username': '22', 'password': '22'}
 
@@ -277,17 +277,32 @@ class DataTest(unittest.TestCase):
 
 class CategoryTest(unittest.TestCase):
 
-    def setUp(self):
+    def get_header(self, credentials):
+        r = requests.post(scry_url+'login', json = credentials)
+        headers = {"Authorization": "JWT "+json.loads(r.text)['token']}
+        return headers
 
+    def get_cat(self, cat_id):
+        ''' cat_id is an array, [None] if wants to get all'''
+        r = requests.post(publisher_url+'getcategories',headers=self.get_header(test_credentials),json=cat_id)
+        return r.text
+
+    def setUp(self):
         cat = create_cat_tree('Parent1')
         cat2 = create_cat_tree('Child1',cat.id)
         cat3 = create_cat_tree('Child2',cat.id)
+        cat4 = create_cat_tree('Child3',cat2.id)
+        cat4 = create_cat_tree('Child4',cat2.id)
+        cat = create_cat_tree('Parent2')
 
 
     def tearDown(self):
+        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Child4').id)
+        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Child3').id)
         delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Child1').id)
         delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Child2').id)
         delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Parent1').id)
+        delete_cat_tree(CategoryTree.get(CategoryTree.name == 'Parent2').id)
 
     def test_already_exist_without_parent_id(self):
         with self.assertRaises(CustomPeeweeError) as error:
@@ -298,6 +313,25 @@ class CategoryTest(unittest.TestCase):
         with self.assertRaises(CustomPeeweeError) as error:
             create_cat_tree('Child1',CategoryTree.get(CategoryTree.name == 'Parent1').id)
         db.close()
+
+    def test_api_get_all_categories(self):
+        d = get_all([CategoryTree.get(CategoryTree.name == 'Parent1').id])
+
+        self.assertEqual(
+            remove_ids_rec(d[0]),
+            {'name': 'Parent1', 'children': [{'name': 'Child1', 'children': [{'name': 'Child3', 'children': []}, {'name': 'Child4', 'children': []}]}, {'name': 'Child2', 'children': []}]})
+
+
+    def test_api_get_all_categories(self):
+        d = get_all([None])
+        for i in d:
+            if i['name'] == 'Parent1':
+                break
+
+        self.assertEqual(
+            remove_ids_rec(i),
+            {'name': 'Parent1', 'children': [{'name': 'Child1', 'children': [{'name': 'Child3', 'children': []}, {'name': 'Child4', 'children': []}]}, {'name': 'Child2', 'children': []}]})
+
 
 
 if __name__ == '__main__':
