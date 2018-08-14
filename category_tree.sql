@@ -5,7 +5,6 @@ CREATE TABLE scry2.category_tree  (
   created_at timestamp  DEFAULT now()
 );
 
-
 CREATE OR REPLACE FUNCTION scry2.category_verify_name() RETURNS trigger AS $category_verify_name$
     DECLARE cat_name  text;
     BEGIN
