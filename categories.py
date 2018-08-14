@@ -73,7 +73,7 @@ class CustomPeeweeError(Exception):
         super(CustomPeeweeError, self).__init__('Custom peewee errors')
         self.message = message
 
-def create_cat_tree(name, parent_id, meta):
+def create_cat_tree(db, name, parent_id, meta):
     try:
         cat = CategoryTree.create(name = name, parent_id = parent_id, metadata = meta)
         return cat
@@ -140,7 +140,7 @@ def remove_ids_rec(d):
             arr.append(remove_ids_rec(i))
     return d
 
-def sort_json_2(arr):
+def sort_json(arr):
     i = 1
     while i < len(arr):
         j = i
