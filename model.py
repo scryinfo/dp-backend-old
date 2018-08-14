@@ -11,15 +11,6 @@ from flask import jsonify
 
 db =  PostgresqlExtDatabase('scry', user=DB_USER,port=5432)
 
-class Categories(Model):
-    name =  CharField(unique=True) # CANNOT CREATE UNIQUE ID
-    metadata =  BinaryJSONField()
-#    created_at = TimestampField(utc=True)
-
-    class Meta:
-        database = db
-        schema='scry2'
-
 class Trader(Model):
     name = CharField(unique=True)
     account = CharField()
@@ -51,28 +42,18 @@ class Listing(Model):
     price = DecimalField(constraints=[Check('price > 0')])
 #    created_at = TimestampField()
     keywords = CharField(null=True)
-    isstructured = BooleanField(null=True)
-    categoryId = IntegerField()
+    categoryId = IntegerField(null=True)
 
     class Meta:
-        database = db
         schema = 'scry2'
+        database = db
 
-
-# class CategoryTree(Model):
-# #    parent_id = IntegerField()
-#     parent_id = ForeignKeyField('self',related_name='children',null=True),
-#     name = CharField()
-#
-#     class Meta:
-#         database = db
-#         schema='scry2'
-#         db_table = 'category_tree'
 
 class CategoryTree(Model):
     name = CharField()
     parent = ForeignKeyField('self', null=True, backref='children')
-    metadata =  BinaryJSONField()
+    is_structured = BooleanField(db_column = 'is_structured')
+    metadata =  BinaryJSONField(null=True)
     class Meta:
         database = db
         schema='scry2'
