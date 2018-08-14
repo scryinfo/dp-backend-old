@@ -4,9 +4,35 @@ import numpy as np
 from api import ScryApiException, ScryApi, publisher_url, scry_url
 from test_data import *
 from categories import create_category, create_cat_tree,  delete_cat_tree, CustomPeeweeError, get_all, remove_ids_rec, sort_all
-from model import db, Categories, CategoryTree
+from model import db, CategoryTree
 import peewee as pe
 import requests
+import pyhash
+hasher = pyhash.fnv1_32()
+
+meta = {        "DataStructure":
+            [
+                {"AirlineId": {"DataType": "Int", "IsUnique": "true", "IsPrimaryKey": "true"}},
+                {"AirlineName": {"DataType": "String", "IsUnique": "true"}},
+                {"ANA": {"DataType": "String", "IsUnique": "true"}},
+                {"IATA": {"DataType": "String", "IsUnique": "true", "IsNull": "true"}},
+                {"IACAO": {"DataType": "String", "IsUnique": "true", "IsNull": "true"}},
+                {"Callsign": {"DataType": "String", "IsUnique": "true"}},
+                {"Country": {"DataType": "String"}},
+                {"Active": {"DataType": "String"}}
+            ]
+    }
+
+
+# CREATE CATEGORY
+parent_id = create_category(db, hasher('Aviation6'), None, 0, None)
+parent_id = create_category(db, hasher('Commercial flights'), parent_id, 0, None)
+parent_id = create_category(db, hasher('Airport Info'), parent_id, 0, meta)
+
+#DELETE CATEGORY
+delete_cat_tree(get_categories_by_name (hasher('Airport Info'))[0])
+delete_cat_tree(get_categories_by_name (hasher('Commercial flights'))[0])
+delete_cat_tree(get_categories_by_name (hasher('Aviation6'))[0])
 
 meta_path = './demo/metadata/'
 
@@ -287,12 +313,12 @@ class CategoryTest(unittest.TestCase):
         return r.text
 
     def setUp(self):
-        cat = create_cat_tree('Parent1',None,{})
-        cat2 = create_cat_tree('Child1',cat.id,{})
-        cat3 = create_cat_tree('Child2',cat.id,{})
-        cat4 = create_cat_tree('Child3',cat2.id,{})
-        cat4 = create_cat_tree('Child4',cat2.id,{})
-        cat = create_cat_tree('Parent2',None,{})
+        cat = create_cat_tree(db,'Parent1',None,{})
+        cat2 = create_cat_tree(db,'Child1',cat.id,{})
+        cat3 = create_cat_tree(db,'Child2',cat.id,{})
+        cat4 = create_cat_tree(db,'Child3',cat2.id,{})
+        cat4 = create_cat_tree(db,'Child4',cat2.id,{})
+        cat = create_cat_tree(db,'Parent2',None,{})
 
 
     def tearDown(self):
@@ -305,12 +331,12 @@ class CategoryTest(unittest.TestCase):
 
     def test_already_exist_without_parent_id(self):
         with self.assertRaises(CustomPeeweeError) as error:
-            a=  create_cat_tree('Parent1',None,{})
+            a=  create_cat_tree(db,'Parent1',None,{})
         db.close()
 
     def test_already_exist_with_parent_id(self):
         with self.assertRaises(CustomPeeweeError) as error:
-            create_cat_tree('Child1',CategoryTree.get(CategoryTree.name == 'Parent1').id,{})
+            create_cat_tree(db,'Child1',CategoryTree.get(CategoryTree.name == 'Parent1').id,{})
         db.close()
 
     def test_api_get_all_categories(self):
