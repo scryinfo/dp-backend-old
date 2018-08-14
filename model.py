@@ -62,9 +62,8 @@ class CategoryTree(Model):
 
 def create_tables():
     db.connect()
-    db.create_tables([Categories,Trader,Listing, CategoryTree])
+    db.create_tables([Trader,Listing, CategoryTree])
     db.close()
-
 
 create_tables()
 
