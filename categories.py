@@ -5,22 +5,34 @@ from flask import jsonify
 import peewee as pe
 
 
-# receives a dictionary "meta" in the python format ex : {'a':'a'}
-# postgresql transforms it into jsonb format {"a":"a"}
-def create_category(db, catname, parent_id,meta):
+
+def create_category(db, catname, parent_id, is_structured, meta):
+    ''' receives a dictionary "meta" in the python format ex : {'a':'a'}
+     postgresql transforms it into jsonb format {"a":"a"}'''
     try:
         db.close()
         db.connect()
-        cat = CategoryTree.create(name=json.dumps(catname), parent_id = parent_id, metadata=meta)
-        cat.save()
+        cat = CategoryTree.create(name=json.dumps(catname), parent_id = parent_id, is_structured = is_structured, metadata = meta)
+        print (cat)
+#        cat.save()
         db.close()
+        return cat
     except:
         db.rollback()
         raise
 
 
-# This function is used to verify Metadata structure (input from categories)
+def get_categories_by_name (cat_name):
+    query = CategoryTree.select().where(CategoryTree.name == cat_name)
+    arr = []
+    for i in query:
+        arr.append(i.id)
+    return arr
+
+
 def validate_category(ds,):
+    ''' This function is used to verify Metadata structure (input from categories)'''
+
     print("TEST METADATA")
     testResult=[]
     for d in ds:
@@ -162,6 +174,16 @@ def sort_all(arr):
     for i in arr:
         arr2.append({'name': i['name'], 'children': sort_all(i['children'])})
     return arr2
+
+def get_parents(requested_id):
+    cat = CategoryTree.get(id=requested_id)
+    dic = model_to_dict(cat)
+    if dic['parent'] == None:
+        return dic
+    a = dic.pop('parent')
+    dic['parent'] = get_parents(a['id'])
+    return dic
+
 
 
 if __name__ == '__main__':
