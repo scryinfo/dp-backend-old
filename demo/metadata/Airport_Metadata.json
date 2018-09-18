@@ -1,6 +1,10 @@
-{
-	"CategoryName": ["Aviation", "Commercial", "Airport"],
-	"DataStructure": [{
+[
+{"category_name":"Aviation","is_structured":false},
+	 {"category_name":"Commercial","is_structured":false},
+	 {"category_name":"Airport","is_structured":true, "metadata" :
+
+
+ [{
 			"AirportId": {
 				"DataType": "Int",
 				"IsUnique": "true",
@@ -77,4 +81,4 @@
 			}
 		}
 	]
-}
+}]

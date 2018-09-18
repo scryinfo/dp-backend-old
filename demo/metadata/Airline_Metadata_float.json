@@ -1,6 +1,7 @@
-{
-	"CategoryName": ["Aviation", "Commercial", "Airline_Float"],
-	"DataStructure": [{
+ [{"category_name":"Aviation","is_structured":false},
+		{"category_name":"Commercial","is_structured":false},
+		{"category_name":"Airline_Float","is_structured":true, "metadata" :
+	 [{
 			"AirlineId": {
 				"DataType": "Float",
 				"IsUnique": "true",
@@ -46,5 +47,5 @@
 			}
 		}
 
-	]
-}
+	]}
+]

@@ -1,45 +1,47 @@
-{
-	"CategoryName": ["Aviation", "Commercial", "Schedule"],
-	"DataStructure": [{
-		"flight_number": {
-			"DataType": "String",
-			"FieldLength":8
-		}
-	},
-		{
-			"airline": {
-				"DataType": "String",
-				"FieldLength":8
-			}
+[
+{"category_name":"Aviation","is_structured":false},
+	 {"category_name":"Commercial","is_structured":false},
+	 {"category_name":"Schedule","is_structured":true, "metadata" :
+		 [{
+		 	 "flight_number": {
+		 		 "DataType": "String",
+		 		 "FieldLength":8
+		 	 }
+		  },
+		 	 {
+		 		 "airline": {
+		 			 "DataType": "String",
+		 			 "FieldLength":8
+		 		 }
 
-		},
-		{
-			"model": {
-				"DataType": "String"
-			}
-		},
-		{
-			"origin": {
-				"DataType": "String",
-				"FieldLength":4
+		 	 },
+		 	 {
+		 		 "model": {
+		 			 "DataType": "String"
+		 		 }
+		 	 },
+		 	 {
+		 		 "origin": {
+		 			 "DataType": "String",
+		 			 "FieldLength":4
 
-			}
-		},
-		{
-			"destination": {
-				"DataType": "String",
-				"FieldLength":4
-			}
-		},
-		{
-			"departure_time": {
-				"DataType": "StandardTime"
-			}
-		},
-		{
-			"arrival_time": {
-				"DataType": "StandardTime"
-			}
-		}
-	]
-}
+		 		 }
+		 	 },
+		 	 {
+		 		 "destination": {
+		 			 "DataType": "String",
+		 			 "FieldLength":4
+		 		 }
+		 	 },
+		 	 {
+		 		 "departure_time": {
+		 			 "DataType": "StandardTime"
+		 		 }
+		 	 },
+		 	 {
+		 		 "arrival_time": {
+		 			 "DataType": "StandardTime"
+		 		 }
+		 	 }
+		  ]
+}]

@@ -12,8 +12,10 @@ def create_category(db, catname, parent_id, is_structured, meta):
     try:
         db.close()
         db.connect()
-        cat = CategoryTree.create(name=json.dumps(catname), parent_id = parent_id, is_structured = is_structured, metadata = meta)
-        print (cat)
+        cat = CategoryTree.create(name = catname,
+            parent_id = parent_id,
+            is_structured = is_structured,
+            metadata = meta)
 #        cat.save()
         db.close()
         return cat
@@ -85,9 +87,9 @@ class CustomPeeweeError(Exception):
         super(CustomPeeweeError, self).__init__('Custom peewee errors')
         self.message = message
 
-def create_cat_tree(db, name, parent_id, meta):
+def create_cat_tree(db, name, parent_id, is_structured, meta):
     try:
-        cat = CategoryTree.create(name = name, parent_id = parent_id, metadata = meta)
+        cat = CategoryTree.create(name = name, parent_id = parent_id, is_structured = is_structured, metadata = meta)
         return cat
     except pe.InternalError as e:
         a = e.__context__.pgerror
@@ -129,7 +131,6 @@ def get_all(inp):
     '''Receive an array of category ids as an input ex : [1], [2,3]
        To get whole database info pass [None] as argument
     '''
-    print(inp)
     if inp == [None]:
         inp = get_parent_id_null()
     if inp == []:
@@ -168,7 +169,7 @@ def sort_all(arr):
         return arr
 
     if len(arr)>1:
-        arr = sort_json_2(arr)
+        arr = sort_json(arr)
 
     arr2=[]
     for i in arr:
@@ -184,11 +185,31 @@ def get_parents(requested_id):
     dic['parent'] = get_parents(a['id'])
     return dic
 
+def get_last_category_id (cat_list):
+    ''' This function receives a list of categories and related subcategories
+        ex : ['Aviation','Commercial','Airline']
+        Aviations has a child commercial that has a child Airline
+        The function will return the id of Airline
+    '''
+    for i in list(range(0, len(cat_list))):
+        if i == 0:
+             parent_id = None
+        cat = CategoryTree.get(name=cat_list[i], parent_id=parent_id)
+        a = model_to_dict(cat)
+        if i == len(cat_list)-1:
+            return a['id']
+        parent_id = a['id']
+
+
 
 
 if __name__ == '__main__':
-    ds = [{'airlineId': {'IsPrimaryKey': 'true', 'IsUnique': 'true', 'DataType': 'Int'}}]
-    c = Column(ds[0])
-    assert c.colname == 'airlineId'
-    assert c.val == {'IsPrimaryKey': 'true', 'IsUnique': 'true', 'DataType': 'Int'}
-    c.validate()
+    for files in os.listdir('./demo/metadata/'):
+        f = json.load(open('./demo/metadata/' + files))
+        print(f)
+
+    # ds = [{'airlineId': {'IsPrimaryKeys': 'true', 'IsUnique': 'trues', 'DataType': 'Int'}}]
+    # c = Column(ds[0])
+#    assert c.colname == 'airlineId'
+#    assert c.val == {'IsPrimaryKey': 'true', 'IsUnique': 'true', 'DataType': 'Int'}
+    # print(c.validate())

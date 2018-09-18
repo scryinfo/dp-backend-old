@@ -67,44 +67,44 @@ def create_tables():
 
 create_tables()
 
-def test_create_categories():
-    #catname=["FF"]
-    def create_category(db,meta):
-        try:
-            db.connect()
-
-            cat = Categories.create(name=catname, metadeata=meta)
-            cat.save()
-            db.close()
-            result='success'
-        except IntegrityError:
-            result='already exists'
-        except OperationalError:
-            result='operational error'
-        return result
-
-file_cid='adsadad213dfd'
-account=1
-size=10
-filename='file6'
-price='10'
-catname='["Aviation", "Commercial Flights", "Airport Info"]'
-keywords='Aviation,Commercial,Airlines'
-
-def record_listing(file_cid,account,size,filename,price,catname,keywords):
-    # Get category_id
-    try:
-        cat=Categories.get(Categories.name==catname)
-        cat_id=cat.id
-        print(cat_id)
-    except:
-        return 'Category doesnt exist'
-
-    try:
-        listing = Listing(cid=file_cid, size=10,ownerId=account, name=filename, price=price,keywords=keywords,isstructured=1,categoryId=cat_id)#,
-        listing.save()
-        db.close()
-        return 'Listing Created'
-    except IntegrityError:
-        db.close()
-        return 'IntegrityError'
+# def test_create_categories():
+#     #catname=["FF"]
+#     def create_category(db,meta):
+#         try:
+#             db.connect()
+#
+#             cat = Categories.create(name=catname, metadeata=meta)
+#             cat.save()
+#             db.close()
+#             result='success'
+#         except IntegrityError:
+#             result='already exists'
+#         except OperationalError:
+#             result='operational error'
+#         return result
+#
+# file_cid='adsadad213dfd'
+# account=1
+# size=10
+# filename='file6'
+# price='10'
+# catname='["Aviation", "Commercial Flights", "Airport Info"]'
+# keywords='Aviation,Commercial,Airlines'
+#
+# def record_listing(file_cid,account,size,filename,price,catname,keywords):
+#     # Get category_id
+#     try:
+#         cat=Categories.get(Categories.name==catname)
+#         cat_id=cat.id
+#         print(cat_id)
+#     except:
+#         return 'Category doesnt exist'
+#
+#     try:
+#         listing = Listing(cid = file_cid, size=10, ownerId = account, name=filename, price=price,keywords=keywords,isstructured=1,categoryId=cat_id)#,
+#         listing.save()
+#         db.close()
+#         return 'Listing Created'
+#     except IntegrityError:
+#         db.close()
+#         return 'IntegrityError'

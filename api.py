@@ -1,5 +1,5 @@
-import json
-import requests
+import json, io, requests
+from categories import get_last_category_id
 
 
 #scry_path='https://dev.scry.info:443/scry2/'
@@ -76,6 +76,28 @@ class ScryApi(object):
         finally:
             for f in files.values():
                 f.close()
+        return res
+
+    def publisher2(self, data=None, listing_info=None):
+        files = {}
+        if data:
+            files['data'] = open(self.data_path + data, 'rb')
+        if listing_info:
+            f1 = open(self.listing_path + listing_info)
+            listing_info = json.loads(f1.read())
+            f1.close()
+            listing_info['category_id'] = get_last_category_id(listing_info['category_name'])
+            listing_info = json.dumps(listing_info)
+
+            files['listing_info'] = listing_info
+        try:
+            res = self._post('publisher', files=files)
+        finally:
+            for f in files.values():
+                try:
+                    f.close()
+                except:
+                    continue
         return res
 
     def search(self, payload):

@@ -2,9 +2,9 @@
 from flask import Flask,request, jsonify,make_response, render_template, Response
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
-from categories import create_category,validate_category
+from categories import create_category,validate_category, get_all, CustomPeeweeError, get_last_category_id
 from publisher import publish_data,getMetadata, load_data, record_listing,add_file_to_IPFS
-from model import db, Categories, Trader, Listing
+from model import db, CategoryTree, Trader, Listing
 from peewee import IntegrityError,OperationalError,InternalError
 import simplejson
 from werkzeug.utils import secure_filename
@@ -50,6 +50,12 @@ print(app.config['MAX_CONTENT_LENGTH'])
 
 jwt = JWT(app, authenticate, identity)
 
+
+# @app.after_request
+# def close_conn():
+#     db.close()
+
+
 @app.errorhandler(401)
 def server_internal_Error(e):
     return jsonify({
@@ -58,7 +64,15 @@ def server_internal_Error(e):
       "status_code": 401
     }), 401
 
+@app.errorhandler(InternalError)
+def peewee_internal(e):
+    return jsonify({
+      "description": "DB Error",
+      "error": e,
+      "status_code": 401
+    }), 401
 
+    _
 @app.errorhandler(400)
 def page_not_found(e):
     print(e)
@@ -73,29 +87,23 @@ def page_not_found(e):
 
 # FROM Categories.py : uses validate_category and create_category
 @app.route('/categories',methods=['POST'])
-#@jwt_required()
+@jwt_required()
 def categories():
     if not request.is_json:
         return json.dumps({'Result': 'Not Json'})
 
-    data=request.get_json()
+    data = request.get_json()
+    if data['is_structured'] == False:
+        r = model_to_dict(create_category(db, data['category_name'], data['parent_id'],data['is_structured'],None))
+        return make_response(jsonify(r),200)
+    else:
+        v = validate_category(data['metadata'])
+        if v == []:
+            r = model_to_dict(create_category(db, data['category_name'], data['parent_id'],data['is_structured'],data['metadata']))
+            return make_response(jsonify(r),200)
+        else:
+            return make_response(jsonify(v), 422)
 
-    try:
-        test_data = validate_category(data['DataStructure'])
-        if test_data != []:
-            return json.dumps({'Result': 'Metadata Error', 'DataErrors': test_data})
-
-        create_category(db, data['CategoryName'], data)
-        return json.dumps({'Result': 'Category Created'})
-
-    except KeyError as e:
-        return json.dumps({'Result': 'No %s' % str(e)})
-    except IntegrityError:
-        return json.dumps({'Result': "CategoryName already exists"})
-    except Exception as e:
-          return json.dumps({'Result': str(type(e)) + ":" + str(e)})
-
-    return json.dumps(['unexpected end'])
 
 
 @app.route('/validate_category',methods=['POST'])
@@ -122,29 +130,35 @@ def validate_metadata():
 @app.route('/publisher',methods=['POST'])
 @jwt_required()
 def  publisher():
-
+    '''Requires : listing_info () "Category_id", "filename", "price","keywords" "data" '''
     f=request.files['listing_info'].read().decode("utf-8")
+    print("LISTING INFO", f)
     listing_info=json.loads(f)
 
-    IPFS_hash, filesize = add_file_to_IPFS(listing_info['filename'], request.files['data'], app.config['UPLOAD_FOLDER'])
+    IPFS_hash, filesize = add_file_to_IPFS(
+        listing_info['filename'],
+        request.files['data'], app.config['UPLOAD_FOLDER'])
 
-    meta=getMetadata(json.dumps(listing_info['category_name']))
+#    meta = getMetadata(json.dumps(listing_info.['category_id']))
+    meta = getMetadata(json.dumps(listing_info['category_id']))
+
 
     df = load_data(os.path.join(app.config['UPLOAD_FOLDER'],secure_filename(listing_info['filename'])),meta)
+    print("SUCCESS  !!!!!!!!!!!")
     if df is None:
+        print("NO DF")
         return make_response(jsonify({'message':'Data file column number doesnt match metadata'}),422)
 
-    test_success, test_detail=full_test (df, meta['DataStructure'])
-
-    print(current_identity)
+    test_success, test_detail=full_test (df, meta)
     if test_success:
+
         result = record_listing (db,
             IPFS_hash,
             current_identity,
             filesize,
             listing_info['filename'],
             listing_info['price'],
-            json.dumps(listing_info['category_name']),
+            json.dumps(listing_info['category_id']),
             listing_info['keywords'])
 
         return make_response(simplejson.dumps({'message':'Success'}, ignore_nan=True), 200) # Simple json is used to handle Nan values in test result numpy array TestIsNull
@@ -156,17 +170,14 @@ def  publisher():
             ), 422)
 
 
-@app.route('/getcategories',methods=['GET'])
+@app.route('/getcategories',methods=['POST'])
 @jwt_required()
 def  getcategories():
-    print("GET CATEGORIES")
-    cat_list=[]
-    for cat in Categories.select():
-        c=model_to_dict(cat)
-        cat_list.append(c)
-    db.close()
+    cat_list=json.loads(request.get_json())
+    print(cat_list)
 
-    return jsonify(cat_list)
+    print(type(cat_list))
+    return jsonify(get_all(cat_list))
 
 @app.route('/search_keywords',methods=['GET'])
 #@jwt_required()
@@ -219,7 +230,7 @@ def search_keywords():
     for row in cursor.fetchall():
         listing_ids.append(row[0])
 
-    if len(listing_ids)>0:
+    if len(listing_ids) > 0:
         for l in listing_ids:
             li = Listing.get(Listing.id == l)
             listings.append(model_to_dict(li))
@@ -227,6 +238,18 @@ def search_keywords():
     db.close()
 
     return jsonify(listings)
+
+
+@app.route('/get_last_category_id', methods=['POST'])
+@jwt_required()
+def last_category_id():
+    '''Expects a json 'cat_list' that contains an array'''
+    data = request.get_json()
+    print(data)
+    a = get_last_category_id(data['cat_list'])
+    return make_response(jsonify({'cat_id': a}), 200)
+
+
 
 @app.route('/listing_by_categories',methods=['GET'])
 @jwt_required()

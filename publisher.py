@@ -2,7 +2,7 @@
 import pandas as pd
 import os
 import requests
-from model import db,Listing, Trader, Categories
+from model import db,Listing, Trader, CategoryTree
 from settings import *
 import json
 from peewee import IntegrityError
@@ -56,7 +56,8 @@ def getColNames (metadata):
 
 # Load data from a csv, requires metadata and no header
 def load_data(path,meta):
-    colnames = getColNames(meta['DataStructure'])
+    print(meta)
+    colnames = getColNames(meta)
     df = pd.read_csv(path,header=None)
 
     cols=df.columns.values
@@ -82,17 +83,13 @@ def result_to_csv(wrapped_result,test_folder):
             a.to_csv(test_folder+i)
 
 
-def getMetadata(category_name=None):
-    catdata=Categories.get(Categories.name==category_name)
+def getMetadata(category_id):
+    catdata = CategoryTree.get(CategoryTree.id == category_id)
     return catdata.metadata
 
 
-def record_listing(db,file_cid,trader_id,size,filename,price,catname,keywords):
-    # Get category_id
-    cat=Categories.get(Categories.name==catname)
-    cat_id=cat.id
-
-    listing = Listing(cid=file_cid, size=size,ownerId=trader_id, name=filename, price=price,keywords=keywords,isstructured=1,categoryId=cat_id)#,
+def record_listing(db, file_cid, trader_id, size, filename, price, category_id, keywords):
+    listing = Listing(cid=file_cid, size=size,ownerId=trader_id, name=filename, price=price,keywords=keywords,categoryId=category_id)#,
     listing.save()
     db.close()
 
