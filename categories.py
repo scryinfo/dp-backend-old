@@ -10,7 +10,6 @@ def create_category(db, catname, parent_id, is_structured, meta):
     ''' receives a dictionary "meta" in the python format ex : {'a':'a'}
      postgresql transforms it into jsonb format {"a":"a"}'''
     try:
-        db.connect()
         cat = CategoryTree.create(name = catname,
             parent_id = parent_id,
             is_structured = is_structured,
@@ -18,7 +17,7 @@ def create_category(db, catname, parent_id, is_structured, meta):
         db.close()
         return cat
     except:
-        db.rollback()
+        db.close()
         raise
 
 
