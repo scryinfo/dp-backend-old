@@ -10,13 +10,11 @@ def create_category(db, catname, parent_id, is_structured, meta):
     ''' receives a dictionary "meta" in the python format ex : {'a':'a'}
      postgresql transforms it into jsonb format {"a":"a"}'''
     try:
-        db.close()
         db.connect()
         cat = CategoryTree.create(name = catname,
             parent_id = parent_id,
             is_structured = is_structured,
             metadata = meta)
-#        cat.save()
         db.close()
         return cat
     except:
@@ -26,6 +24,7 @@ def create_category(db, catname, parent_id, is_structured, meta):
 
 def get_categories_by_name (cat_name):
     query = CategoryTree.select().where(CategoryTree.name == cat_name)
+    db.close()
     arr = []
     for i in query:
         arr.append(i.id)
@@ -90,6 +89,7 @@ class CustomPeeweeError(Exception):
 def create_cat_tree(db, name, parent_id, is_structured, meta):
     try:
         cat = CategoryTree.create(name = name, parent_id = parent_id, is_structured = is_structured, metadata = meta)
+        db.close()
         return cat
     except pe.InternalError as e:
         a = e.__context__.pgerror
@@ -117,10 +117,12 @@ def delete_cat_tree(cat_id):
 
 def get_child_id(id):
     cat = CategoryTree.get(id=id)
+    db.close()
     return model_to_dict(cat, backrefs=True)
 
 def get_parent_id_null():
     query = CategoryTree.select().where(CategoryTree.parent_id.is_null())
+    db.close()
     arr = []
     for i in query:
         arr.append(i.id)
@@ -178,6 +180,7 @@ def sort_all(arr):
 
 def get_parents(requested_id):
     cat = CategoryTree.get(id=requested_id)
+    db.close()
     dic = model_to_dict(cat)
     if dic['parent'] == None:
         return dic
@@ -195,6 +198,7 @@ def get_last_category_id (cat_list):
         if i == 0:
              parent_id = None
         cat = CategoryTree.get(name=cat_list[i], parent_id=parent_id)
+        db.close()
         a = model_to_dict(cat)
         if i == len(cat_list)-1:
             return a['id']
