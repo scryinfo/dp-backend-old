@@ -63,10 +63,12 @@ def initialize_categories():
             js = i
             js['parent_id'] = parent_id
             r = requests.post(publisher_url+'categories', headers= headers, json = js)
+
             if r.status_code == 200:
                 parent_id = json.loads(r.text)['id']
             else:
                 parent_id = CategoryTree.get(CategoryTree.name == i['category_name']).id
+                db.close()
 
 
 
@@ -94,23 +96,19 @@ class JWTTest(unittest.TestCase):
 class CategoryTest(unittest.TestCase):
 
     def setUp(self):
-        #db.execute_sql("""DELETE FROM scry2.categories where name='["Aviation6", "Commercial Flights", "Airport Info"]';""")
-        return
-
-    def tearDown(self):
-#        db.execute_sql("""DELETE FROM scry2.categories where name='["Aviation6", "Commercial Flights", "Airport Info"]';""")
-        try:
-            delete_cat_tree(get_categories_by_name ('Airport Info')[0])
-        except:
-            pass
-        try:
-            delete_cat_tree(get_categories_by_name ('Commercial flights')[0])
-        except:
-            pass
         try:
             delete_cat_tree(get_categories_by_name ('Aviation6')[0])
         except:
             pass
+        db.close()
+        return
+
+    def tearDown(self):
+        try:
+            delete_cat_tree(get_categories_by_name ('Aviation6')[0])
+        except:
+            pass
+        db.close()
 
     def create_cat(self, meta):
         return requests.post(publisher_url+'categories',
@@ -118,10 +116,9 @@ class CategoryTest(unittest.TestCase):
             json = meta
             )
 
-
     def test_create_new_category(self):
-
         r = self.create_cat({'category_name': 'Aviation6', 'parent_id':None,'is_structured':False})
+        print(r.text)
         self.assertEqual(r.status_code, 200)
 
     def test_category_exists(self):
@@ -146,11 +143,17 @@ class CategoryTest(unittest.TestCase):
             , 'metadata':[{'airlineId': {'IsPrimaryKeys': 'true', 'IsUnique': 'trues', 'DataType': 'Int'}}] })
 
         self.assertEqual(r.status_code, 422)
-#        print(json.loads(r.text))
-#        m = [[ "airlineId","IsUnique","trues","Exception(\'No Match\',)"],["airlineId","IsPrimaryKeys","true","KeyError(\'IsPrimaryKeys\',)"]]
-        m = [['airlineId', 'IsPrimaryKeys', 'true', "KeyError('IsPrimaryKeys',)"], ['airlineId', 'IsUnique', 'trues', "Exception('No Match',)"]]
+        d = {}
+        for i in json.loads(r.text):
+            d[i[1]] = i
+        print(d)
+        m = {
+            'IsPrimaryKeys': ['airlineId', 'IsPrimaryKeys', 'true', "KeyError('IsPrimaryKeys',)"],
+            'IsUnique': ['airlineId', 'IsUnique', 'trues', "Exception('No Match',)"]
+            }
 
-        self.assertEqual(json.loads(r.text),m)
+
+        self.assertEqual(d,m)
 
 
 
@@ -204,7 +207,6 @@ class PublisherTest(unittest.TestCase):
             return api.publisher(data="airlines_null.dat", listing_info="Airlines_listing.json")
 
     def test_null_in_not_null_column(self):
-
         with self.assertRaises(ScryApiException) as error:
             self.publish_data(data="airlines_null.dat", listing_info="Airlines_listing.json")
 
@@ -265,6 +267,31 @@ class PublisherTest(unittest.TestCase):
         {'message': 'Success'})
 
 
+def list_of_dict_to_dict( l):
+    d ={}
+    for i in l:
+        k = list(i.keys())[0]
+        d[k] = i[k]
+    return d
+
+def list_of_list_to_dict( l):
+    d = {}
+    for i in l:
+        d[i[0]] = i[1]
+    return d
+
+def convert_all (l):
+    '''assumes a list'''
+
+    if type(l[0]) == dict:
+        r= list_of_dict_to_dict(l)
+    else:
+        r= list_of_list_to_dict(l)
+    for i in r:
+#        print(type(r[i]))
+        if type(r[i])== list:
+            r[i] = convert_all(r[i])
+    return r
 
 class DataTest(unittest.TestCase):
 
@@ -272,6 +299,8 @@ class DataTest(unittest.TestCase):
 
     meta=[{"col1":{"DataType": "Int","IsUnique": "true"}},
          {"col2":{"DataType": "Int","IsUnique": "true"}}]
+
+
 
 
     def test_is_null(self,df=df):
@@ -314,19 +343,19 @@ class DataTest(unittest.TestCase):
 
     def test_all_tests_for_dataframe_with_errors(self, df=df, meta=meta):
 
-        self.assertEqual(
-            full_test(df, meta)[1],
-                [{'col1': [{'DataType': [[0, 'a'], [2, 'nan'], [3, 'nan']]}, {'IsNull': [[2, 'nan'], [3, 'nan']]}]}, {'col2': [{'IsUnique': [[0, 1], [2, 1]]}, {'DataType': [[1, 'a'], [3, 2.2]]}]}]
-            )
+        r = full_test(df, meta)
+        r = convert_all(r)
+        r_test = {'col2': {'DataType': {1: 'a', 3: 2.2}, 'IsUnique': {0: 1, 2: 1}}, 'col1': {'DataType': {0: 'a', 2: 'nan', 3: 'nan'}, 'IsNull': {2: 'nan', 3: 'nan'}}}
+
+        self.assertEqual(r, r_test)
 
 
     def test_all_tests_for_dataframe_all_tests_pass_without_error(self, df=df, meta=meta):
         df  = pd.DataFrame(data={'col1': [2, 1,3,4], 'col2': [1, 2,3,4]})
+        df_test = full_test(df, meta)
 
-        self.assertEqual(
-            full_test(df, meta),
-            (True, [])
-            )
+
+        self.assertEqual(df_test,[])
 
 class CategoryTest(unittest.TestCase):
     def get_header(self, credentials):
@@ -359,13 +388,13 @@ class CategoryTest(unittest.TestCase):
     def test_already_exist_without_parent_id(self):
 
 
-        with self.assertRaises(pe.InternalError) as error:
+        with self.assertRaises(pe.IntegrityError) as error:
             a=  create_category(db,'Parent1',None,False,{})
             db.close()
 
 
     def test_already_exist_with_parent_id(self):
-        with self.assertRaises(pe.InternalError) as error:
+        with self.assertRaises(pe.IntegrityError) as error:
             create_category(db,'Child1',CategoryTree.get(CategoryTree.name == 'Parent1').id,False,{})
         db.close()
 

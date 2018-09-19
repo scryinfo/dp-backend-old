@@ -1,5 +1,5 @@
 #JWT TOKEN eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJuYW1lIjoiMjIiLCJhY2NvdW50IjoiMHg0MDc4NDA3YzlhNGIxNzNmNjc5ZTQ3MGY1YjE2N2FmMmQ3MTU2NDFiIiwiaWF0IjoxNTI3NTAwNDkzLCJleHAiOjE1Mjc3MTY0OTN9._-HKiuAc_LUJOHrY5hUAOPMaBY2dxAAQAVr7Q0RblOU
-from flask import Flask,request, jsonify,make_response, render_template, Response
+from flask import Flask,request, jsonify,make_response, render_template, Response, g
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
 from categories import create_category,validate_category, get_all, CustomPeeweeError, get_last_category_id
@@ -10,7 +10,8 @@ import simplejson
 from werkzeug.utils import secure_filename
 import ipfsapi, os
 from playhouse.shortcuts import model_to_dict
-
+from playhouse.postgres_ext import PostgresqlExtDatabase, BinaryJSONField
+from settings import *
 from test_data import full_test
 
 
@@ -51,10 +52,15 @@ print(app.config['MAX_CONTENT_LENGTH'])
 jwt = JWT(app, authenticate, identity)
 
 
-# @app.after_request
-# def close_conn():
-#     db.close()
+@app.before_request
+def before_request():
+    db.connect()
 
+
+@app.after_request
+def after_request(response):
+    db.close()
+    return response
 
 @app.errorhandler(401)
 def server_internal_Error(e):
@@ -95,11 +101,13 @@ def categories():
     data = request.get_json()
     if data['is_structured'] == False:
         r = model_to_dict(create_category(db, data['category_name'], data['parent_id'],data['is_structured'],None))
+        db.close()
         return make_response(jsonify(r),200)
     else:
         v = validate_category(data['metadata'])
         if v == []:
             r = model_to_dict(create_category(db, data['category_name'], data['parent_id'],data['is_structured'],data['metadata']))
+            db.close()
             return make_response(jsonify(r),200)
         else:
             return make_response(jsonify(v), 422)
@@ -149,8 +157,8 @@ def  publisher():
         print("NO DF")
         return make_response(jsonify({'message':'Data file column number doesnt match metadata'}),422)
 
-    test_success, test_detail=full_test (df, meta)
-    if test_success:
+    test_detail=full_test (df, meta)
+    if test_detail == []:
 
         result = record_listing (db,
             IPFS_hash,

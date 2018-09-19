@@ -105,9 +105,7 @@ def assess_result(result):
 
 def full_test(df, meta):
     result = test_dataframe(df, meta)
-    if len(result)>0:
-        return False, result
-    return True, result
+    return result
     # print("FULL TEST")
     # print(result)
     # return assess_result(result), result

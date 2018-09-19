@@ -85,6 +85,7 @@ def result_to_csv(wrapped_result,test_folder):
 
 def getMetadata(category_id):
     catdata = CategoryTree.get(CategoryTree.id == category_id)
+    db.close()
     return catdata.metadata
 
 
