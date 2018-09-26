@@ -2,7 +2,7 @@
 from flask import Flask,request, jsonify,make_response, render_template, Response, g
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
-from categories import create_category,validate_category, get_all, CustomPeeweeError, get_last_category_id
+from categories import create_category,validate_category, get_all, CustomPeeweeError, get_last_category_id, get_parents
 from publisher import publish_data,getMetadata, load_data, record_listing,add_file_to_IPFS
 from model import db, CategoryTree, Trader, Listing
 from peewee import IntegrityError,OperationalError,InternalError
@@ -113,6 +113,21 @@ def categories():
             return make_response(jsonify(v), 422)
 
 
+@app.route('/get_categories',methods=['POST'])
+@jwt_required()
+#'''returns all categories and their childs'''
+def  getcategories():
+    cat_list=json.loads(request.get_json())
+    return jsonify(get_all(cat_list))
+
+
+@app.route('/get_categories_parents',methods=['POST'])
+@jwt_required()
+#''' Post a Json {"id": id} returns all parents'''
+def get_categories_parents():
+    parent_id = json.loads(request.get_json())['id']
+    return make_response(jsonify(get_parents(parent_id)), 200)
+
 
 @app.route('/validate_category',methods=['POST'])
 @jwt_required()
@@ -178,14 +193,6 @@ def  publisher():
             ), 422)
 
 
-@app.route('/getcategories',methods=['POST'])
-@jwt_required()
-def  getcategories():
-    cat_list=json.loads(request.get_json())
-    print(cat_list)
-
-    print(type(cat_list))
-    return jsonify(get_all(cat_list))
 
 @app.route('/search_keywords',methods=['GET'])
 #@jwt_required()

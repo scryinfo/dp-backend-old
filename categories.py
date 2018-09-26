@@ -182,10 +182,11 @@ def get_parents(requested_id):
     db.close()
     dic = model_to_dict(cat)
     if dic['parent'] == None:
-        return dic
-    a = dic.pop('parent')
-    dic['parent'] = get_parents(a['id'])
-    return dic
+        dic['parent'] = []
+    else:
+        a = dic.pop('parent')
+        dic['parent'] = get_parents(a['id'])
+    return [dic]
 
 def get_last_category_id (cat_list):
     ''' This function receives a list of categories and related subcategories
@@ -204,15 +205,11 @@ def get_last_category_id (cat_list):
         parent_id = a['id']
 
 
-
-
 if __name__ == '__main__':
-    for files in os.listdir('./demo/metadata/'):
-        f = json.load(open('./demo/metadata/' + files))
-        print(f)
-
-    # ds = [{'airlineId': {'IsPrimaryKeys': 'true', 'IsUnique': 'trues', 'DataType': 'Int'}}]
-    # c = Column(ds[0])
-#    assert c.colname == 'airlineId'
-#    assert c.val == {'IsPrimaryKey': 'true', 'IsUnique': 'true', 'DataType': 'Int'}
-    # print(c.validate())
+#    print(get_parents(1471))
+    ds = [{'airlineId': {'IsPrimaryKeys': 'true', 'IsUnique': 'trues', 'DataType': 'Int'}}]
+    c = Column(ds[0])
+    assert c.colname == 'airlineId'
+    assert c.val == {'IsUnique': 'trues', 'IsPrimaryKeys': 'true', 'DataType': 'Int'}
+#     print(c.validate())
+    print(get_categories_by_name('Airline_Float'))

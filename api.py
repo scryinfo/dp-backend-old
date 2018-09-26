@@ -24,11 +24,14 @@ class ScryApi(object):
         publisher=publisher_url,
         categories=publisher_url,
         listing_by_categories=publisher_url,
-        listing=publisher_url
+        listing=publisher_url,
+        get_categories=publisher_url,
+        get_categories_parents=publisher_url,
     )
 
     def _get_url(self, path):
         return self.paths[path] + path
+
 
     def _make_headers(self):
         if getattr(self, 'jwt_token', None) is not None:
@@ -45,6 +48,7 @@ class ScryApi(object):
                 print('failed to decode response as JSON: "%s"' % response)
             raise ScryApiException(r.status_code, response)
         return json.loads(r.text)
+
 
     def _get(self, path, **payload):
         r = requests.get(self._get_url(path), payload, headers=self._make_headers())
@@ -105,6 +109,13 @@ class ScryApi(object):
 
     def categories(self, metadata):
         return self._post('categories', json=metadata)
+
+    def get_categories(self, payload):
+        return self._post('get_categories', json=payload)
+
+    def get_categories_parents(self, payload):
+        return self._post('get_categories_parents', json=payload)
+
 
     def listing_by_categories(self, payload):
         return self._get('listing_by_categories', params=payload)

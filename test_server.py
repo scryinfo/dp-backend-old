@@ -158,15 +158,15 @@ class CategoryTest(unittest.TestCase):
 
 
 
-#
-# def search_keywords(keywords, searchtype, userpayload=test_credentials):
-#     api = ScryApi()
-#     api.login(userpayload)
-#     payload = {
-#         'keywords': keywords,
-#         'searchtype' : searchtype
-#     h    }
-#     return api.search(payload)
+
+def search_keywords(keywords, searchtype, userpayload=test_credentials):
+    api = ScryApi()
+    api.login(userpayload)
+    payload = {
+        'keywords': keywords,
+        'searchtype' : searchtype
+        }
+    return api.search(payload)
 
 
 class PublisherTest(unittest.TestCase):
@@ -293,14 +293,32 @@ def convert_all (l):
             r[i] = convert_all(r[i])
     return r
 
+
+def convert_child(l):
+    '''returns a simplified json with only child name '''
+    if l == []:
+        return {}
+    arr={}
+    for i in l:
+        arr[i['name']]= convert_child(i['children'])
+    return arr
+
+def convert_parent(l):
+    '''returns a simplified json with only parent name '''
+    if l == []:
+        return {}
+    arr={}
+    for i in l:
+        arr[i['name']]= convert_parent(i['parent'])
+    return arr
+
+
 class DataTest(unittest.TestCase):
 
     df  = pd.DataFrame(data={'col1': ['a', 1,np.nan,np.nan], 'col2': [1, 'a',1,2.2]})
 
     meta=[{"col1":{"DataType": "Int","IsUnique": "true"}},
          {"col2":{"DataType": "Int","IsUnique": "true"}}]
-
-
 
 
     def test_is_null(self,df=df):
@@ -365,7 +383,7 @@ class CategoryTest(unittest.TestCase):
 
     def get_cat(self, cat_id):
         ''' cat_id is an array, [None] if wants to get all'''
-        r = requests.post(publisher_url+'getcategories',headers=self.get_header(test_credentials),json=cat_id)
+        r = requests.post(publisher_url+'get_categories',headers=self.get_header(test_credentials),json=cat_id)
         return r.text
 
     def setUp(self):
@@ -388,13 +406,13 @@ class CategoryTest(unittest.TestCase):
     def test_already_exist_without_parent_id(self):
 
 
-        with self.assertRaises(pe.IntegrityError) as error:
+        with self.assertRaises(pe.InternalError) as error:
             a=  create_category(db,'Parent1',None,False,{})
             db.close()
 
 
     def test_already_exist_with_parent_id(self):
-        with self.assertRaises(pe.IntegrityError) as error:
+        with self.assertRaises(pe.InternalError) as error:
             create_category(db,'Child1',CategoryTree.get(CategoryTree.name == 'Parent1').id,False,{})
         db.close()
 
@@ -424,6 +442,35 @@ class CategoryTest(unittest.TestCase):
             )
 
 
+    def test_get_categories(self):
+        api = ScryApi()
+        api.login(**test_credentials)
+        r = api.get_categories(json.dumps([None]))
+
+        for i in r:
+            if i['name']=='Aviation':
+                l=[i]
+                break
+
+        self.assertEqual({'Aviation': {'Commercial': {'Airline': {}, 'Airport': {}, 'Airline_Float': {}, 'Schedule': {}}}},convert_child(l))
+
+    def test_get_categories_parent(self):
+        api = ScryApi()
+        api.login(**test_credentials)
+
+        #Get schedule Id
+        r = api.get_categories(json.dumps([None]))
+        for i in r:
+            if i['name'] == 'Aviation':
+                for j in i['children']:
+                    if j['name'] == 'Commercial':
+                        for k in j['children']:
+                            if k['name'] == 'Schedule':
+                                schedule_id = k['id']
+                                break
+
+        r = api.get_categories_parents(json.dumps({'id':schedule_id}))
+        self.assertEqual({'Schedule': {'Commercial': {'Aviation': {}}}},convert_parent(r))
 
 
 if __name__ == '__main__':
