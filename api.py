@@ -27,6 +27,7 @@ class ScryApi(object):
         listing=publisher_url,
         get_categories=publisher_url,
         get_categories_parents=publisher_url,
+        delete_categories=publisher_url,
     )
 
     def _get_url(self, path):
@@ -116,6 +117,8 @@ class ScryApi(object):
     def get_categories_parents(self, payload):
         return self._post('get_categories_parents', json=payload)
 
+    def delete_categories(self, payload):
+        return self._post('delete_categories', json=payload)
 
     def listing_by_categories(self, payload):
         return self._get('listing_by_categories', params=payload)

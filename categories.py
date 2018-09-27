@@ -107,12 +107,14 @@ def delete_cat_tree(cat_id):
     try:
         cat = CategoryTree.get(CategoryTree.id == cat_id)
         cat.delete_instance()
-        print('Category deleted')
-    except IntegrityError:
+        return {'name':cat.name, 'id': cat.id, 'metadata' : cat.metadata}
+    except IntegrityError as inst:
         print("Dependent Categories")
     except:
         print('Category doesnt exist')
     db.close()
+    raise CustomPeeweeError('Not deleted')
+
 
 def get_child_id(id):
     cat = CategoryTree.get(id=id)
@@ -206,6 +208,14 @@ def get_last_category_id (cat_list):
 
 
 if __name__ == '__main__':
+    try:
+#        cat = CategoryTree.get(CategoryTree.name == 'ttt')
+        cat = CategoryTree.get(CategoryTree.id == 162)
+        cat.delete_instance()
+        print("CAT IS :",{'name':cat.name, 'id': cat.id, 'metadata' : cat.metadata})
+    except Exception as e:
+        print("EXCEPTION      ",type(e))
+
 #    print(get_parents(1471))
     ds = [{'airlineId': {'IsPrimaryKeys': 'true', 'IsUnique': 'trues', 'DataType': 'Int'}}]
     c = Column(ds[0])

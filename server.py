@@ -2,7 +2,7 @@
 from flask import Flask,request, jsonify,make_response, render_template, Response, g
 from flask_cors import CORS
 from flask_jwt import JWT, jwt_required, current_identity
-from categories import create_category,validate_category, get_all, CustomPeeweeError, get_last_category_id, get_parents
+from categories import create_category,validate_category, get_all, CustomPeeweeError, get_last_category_id, get_parents, delete_cat_tree
 from publisher import publish_data,getMetadata, load_data, record_listing,add_file_to_IPFS
 from model import db, CategoryTree, Trader, Listing
 from peewee import IntegrityError,OperationalError,InternalError
@@ -128,6 +128,14 @@ def get_categories_parents():
     parent_id = json.loads(request.get_json())['id']
     return make_response(jsonify(get_parents(parent_id)), 200)
 
+@app.route('/delete_categories',methods=['POST'])
+@jwt_required()
+#''' Post a Json containing the id to be deleted[{"id": id}]'''
+def delete_categories():
+    deleted_id = json.loads(request.get_json())['id']
+    print("Trying to delete ", deleted_id)
+    d = delete_cat_tree(deleted_id)
+    return make_response(json.dumps(d), 200)
 
 @app.route('/validate_category',methods=['POST'])
 @jwt_required()

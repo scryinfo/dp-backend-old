@@ -118,7 +118,6 @@ class CategoryTest(unittest.TestCase):
 
     def test_create_new_category(self):
         r = self.create_cat({'category_name': 'Aviation6', 'parent_id':None,'is_structured':False})
-        print(r.text)
         self.assertEqual(r.status_code, 200)
 
     def test_category_exists(self):
@@ -146,12 +145,10 @@ class CategoryTest(unittest.TestCase):
         d = {}
         for i in json.loads(r.text):
             d[i[1]] = i
-        print(d)
         m = {
             'IsPrimaryKeys': ['airlineId', 'IsPrimaryKeys', 'true', "KeyError('IsPrimaryKeys',)"],
             'IsUnique': ['airlineId', 'IsUnique', 'trues', "Exception('No Match',)"]
             }
-
 
         self.assertEqual(d,m)
 
@@ -471,6 +468,31 @@ class CategoryTest(unittest.TestCase):
 
         r = api.get_categories_parents(json.dumps({'id':schedule_id}))
         self.assertEqual({'Schedule': {'Commercial': {'Aviation': {}}}},convert_parent(r))
+
+    def test_delete_with_dependance(self):
+        api = ScryApi()
+        api.login(**test_credentials)
+
+        r = api.get_categories(json.dumps([None]))
+        for i in r:
+            if i['name'] == 'Parent1':
+                for j in i['children']:
+                    if j['name'] == 'Child1':
+                        child_id = j['id']
+                        break
+
+        with self.assertRaises(ScryApiException) as error:
+            api.delete_categories(json.dumps({'id':child_id}))
+
+    def test_delete_without_dependance(self):
+        api = ScryApi()
+        api.login(**test_credentials)
+
+        r = api.categories({'category_name': 'test_t', 'parent_id':None,'is_structured':False})
+        d_id = r['id']
+
+        r2 = api.delete_categories(json.dumps({'id':d_id}))
+        self.assertEqual(r2['name'],'test_t')
 
 
 if __name__ == '__main__':
