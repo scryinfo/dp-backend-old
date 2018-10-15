@@ -70,6 +70,15 @@ def server_internal_Error(e):
       "status_code": 401
     }), 401
 
+@app.errorhandler(CustomPeeweeError)
+def custom_peewe(e):
+    return jsonify({
+      "description": "DB Error",
+      "error": json.dumps(e.__dict__),
+      "status_code": 401
+    }), 401
+
+
 @app.errorhandler(InternalError)
 def peewee_internal(e):
     return jsonify({

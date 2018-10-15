@@ -109,11 +109,11 @@ def delete_cat_tree(cat_id):
         cat.delete_instance()
         return {'name':cat.name, 'id': cat.id, 'metadata' : cat.metadata}
     except IntegrityError as inst:
-        print("Dependent Categories")
+        m = "Dependent Categories"
     except:
-        print('Category doesnt exist')
+        m = 'Category doesnt exist'
     db.close()
-    raise CustomPeeweeError('Not deleted')
+    raise CustomPeeweeError(m)
 
 
 def get_child_id(id):

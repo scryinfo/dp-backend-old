@@ -192,16 +192,29 @@ class PublisherTest(unittest.TestCase):
 
     def test_publish_with_no_jwt(self):
         api = self.make_api()
-        with self.assertRaises(ScryApiException):
-            return api.publisher(data="airlines_null.dat", listing_info="Airlines_listing.json")
+        with self.assertRaises(ScryApiException) as error:
+            api.publisher(data="airlines_null.dat", listing_info="Airlines_listing.json")
+
+        self.assertEquals (
+                error.exception.response,
+                {'status_code': 401,
+                'description': 'Request does not contain an access token',
+                'error': 'Authorization Required'}
+                )
 
     def test_publish_data_with_wrong_jwt(self):
         api = self.make_api()
         api.login(**test_credentials)
         api.jwt_token += 'a'
-        with self.assertRaises(ScryApiException):
+        with self.assertRaises(ScryApiException) as error:
+            api.publisher(data="airlines_null.dat", listing_info="Airlines_listing.json")
 
-            return api.publisher(data="airlines_null.dat", listing_info="Airlines_listing.json")
+        self.assertEquals (
+                error.exception.response,
+                {'status_code': 401,
+                'description': 'Signature verification failed',
+                'error': 'Invalid token'}
+                )
 
     def test_null_in_not_null_column(self):
         with self.assertRaises(ScryApiException) as error:
@@ -483,6 +496,12 @@ class CategoryTest(unittest.TestCase):
 
         with self.assertRaises(ScryApiException) as error:
             api.delete_categories(json.dumps({'id':child_id}))
+        self.assertEqual(
+            error.exception.response,
+            {'description': 'DB Error',
+            'status_code': 401,
+            'error': '{"message": "Dependent Categories"}'}
+        )
 
     def test_delete_without_dependance(self):
         api = ScryApi()
