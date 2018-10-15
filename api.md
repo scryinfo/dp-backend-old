@@ -78,7 +78,7 @@ RESPONSE:
   To publish data
 
   ```
-  GET https://dev.scry.info:443/meta/getcategories
+  POST https://dev.scry.info:443/meta/publisher
   ```
 
   AUTHENTICATION
@@ -97,10 +97,10 @@ Multiple file post, enctype="multiparnt/form-data".
 2) The second file should be named "listing_info "
 
 Listing info :
-- category_name : extracted from "/getcategories" above. Must match exact values.
-- price : price of the listing
-- filename : name of the file that will be listed on scry.info and downloaded
-- keyword : keywords related to the file that can be searched on scry.
+- category_name (String): extracted from "/getcategories" above. Must match exact values.
+- price (Int): price of the listing
+- filename (String) : name of the file that will be listed on scry.info and downloaded
+- keyword (String): keywords related to the file that can be searched on scry. Must be separated by a space.
 
 ```
    {
@@ -111,6 +111,127 @@ Listing info :
    }
 ```
 
+## DELETE CATEGORY
+
+
+To delete a category
+
+```
+POST https://dev.scry.info:443/meta/delete_categories
+```
+
+AUTHENTICATION
+
+Headers :
+```
+"Authorization : JWT JwtToken"
+```
+The json must contain the id of the category. Ex:
+
+```
+{"Id":32}
+```
+
+If some childs depend on parent, the API will return the following error.
+```
+      {'description': 'DB Error',
+      'status_code': 401,
+      'error': '{"message": "Dependent Categories"}'}
+  )
+```
+
+## CREATE CATEGORY
+
+
+To create a category
+
+```
+POST https://dev.scry.info:443/meta/categories
+```
+
+AUTHENTICATION
+
+Headers :
+```
+"Authorization : JWT JwtToken"
+```
+
+INPUT
+
+Posts a json containing the following info
+
+Listing info :
+- category_name (String): Name of the category. For a parent category, all child names must unique, but different parent categories can have the same child name
+- parent_id (Int, Optional): Category_id of the parent category. Can be left NULL.
+- IsStructured (Boolean): If True, means the data is structured and must have metedata.
+- Metadata (Json): keywords related to the file that can be searched on scry. Json is a list of objects structured as follow : {"ColumnName" : [{"MasterData":"Value"}]}
+
+Ex.: [
+      {"Id" : [
+        { "DataType": "Int",
+          "IsUnique" : "True"
+          "IsPrimaryKey":"True"}
+        ]},
+        {"UserName" : [
+          { "DataType": "String",
+            "IsUnique" : "True"
+            "IsPrimaryKey":"True"}
+          ]},
+          ,
+          {"PhoneNumber" : [
+            { "DataType": "Int",
+              "IsUnique" : "True"
+            ]}
+      ]
+
+
+- DataType (String) : Define the type of the structure for a column
+- IsNull (String) : True if the data can be null. If not value is specified, the default is value is False
+- IsUnique (String) : Unique constraint on the column. It Default value is False.
+ the structure will be checked if it matches the the structure below. "DataType" is compulsory, "IsNull", "IsUnique"  are optional
+
+masterMetaData={
+                 "DataType":["String","Int","Float","Date","Datetime","StandardTime"],
+                 "IsNull" : ["True","False"],
+                 "IsUnique":["True","False"],
+                 "IsPrimaryKey":["True","False"]
+            }
+
+Ex 1 :
+```
+ {
+   "category_name": "Airline",
+   "parent_id": null,
+   "IsStructured": False,
+   "Metadata": null
+ }
+```
+
+Ex 2 :
+```
+ {
+   "category_name": "Airport",
+   "parent_id": 101,
+   "IsStructured": True,
+   "Metadata": [
+         {"Id" : [
+           { "DataType": "Int",
+             "IsUnique" : "True"
+             "IsPrimaryKey":"True"}
+           ]},
+           {"UserName" : [
+             { "DataType": "String",
+               "IsUnique" : "True"
+               "IsPrimaryKey":"True"}
+             ]},
+             ,
+             {"PhoneNumber" : [
+               { "DataType": "Int",
+                 "IsUnique" : "True"
+               ]}
+         ]
+ }
+```
 
 
 
