@@ -1,4 +1,18 @@
-# API INFORMATION
+s# API INFORMATION
+
+## INTRODUCTION
+
+The api  allows data being published to scry.info website.
+
+If the data published has a category and this category requires data testing, the application will check data.
+
+Check "category" below for information about how the data is being tested.
+
+
+Step 1 : Get JWT Token - https://dev.scry.info:443/scry2/login
+Step 2 : Send data to the publisher - https://dev.scry.info:443/meta/publisher
+
+
 
 ## AUTHENTICATION
 
@@ -72,44 +86,6 @@ RESPONSE:
 
 
 
-  ## PUBLISH DATA
-
-
-  To publish data
-
-  ```
-  POST https://dev.scry.info:443/meta/publisher
-  ```
-
-  AUTHENTICATION
-
-  Headers :
-  ```
-  "Authorization : JWT JwtToken"
-  ```
-
-INPUT
-
-
-Multiple file post, enctype="multiparnt/form-data".
-
-1) The first file should have name "data" and should contain a csv without headers.
-2) The second file should be named "listing_info "
-
-Listing info :
-- category_name (String): extracted from "/getcategories" above. Must match exact values.
-- price (Int): price of the listing
-- filename (String) : name of the file that will be listed on scry.info and downloaded
-- keyword (String): keywords related to the file that can be searched on scry. Must be separated by a space.
-
-```
-   {
-     "category_name":["Aviation", "Commercial", "Airline"],
-     "price":1000,
-     "filename":"Airlines.csv",
-     "keywords":"Commercial Airlines"
-   }
-```
 
 ## DELETE CATEGORY
 
@@ -233,70 +209,41 @@ Ex 2 :
  }
 ```
 
+## PUBLISH DATA
 
 
-  ## LISTING QUERY BY KEYWORDS
+To publish data
 
+```
+POST https://dev.scry.info:443/meta/publisher
+```
 
-  Keywords based listin gsearch function.
-  The funnction can search by categoryname, keywords provided by publisher or both.
-  If more than one keyword is provided, a "OR" is applied.
-  The function tokenizes using postgresql to vector so plural and verb tenses are handled.
+AUTHENTICATION
 
-    Ex. aviation and aviations will be considered as the same.
-
-  ```
-  GET https://dev.scry.info:443/meta/search_keywords
-  ```
-  AUTHENTICATION
-
-
-  Headers :
-  ```
-  "Authorization : JWT JwtToken"
-  ```
+Headers :
+```
+"Authorization : JWT JwtToken"
+```
 
 INPUT
 
-- keywords : a string of keywords separated by a space
-  Ex : 'aviation commercial'
-- searchtype: a string containining list of string. As of now there are two options
-    - 'keywords' : the keyword specified on publication
-        Ex :
-        ```
-        keywords='schedule airline'
-        ```
-    - 'searchtype' : area covered in the search. Can be either keywords provided by data publisher, categories name or both.
-        Ex :
-      ```
-              searchtype='["keywords","category"]'
-              searchtype='["keywords"]'
-              searchtype='["category"]'
-      ```
 
+Multiple file post, enctype="multiparnt/form-data".
 
--> note : must be lowercase
+1) The first file should have name "data" and should contain a csv without headers.
+2) The second file should be named "listing_info "
+
+Listing info :
+- category_name (String): extracted from "/getcategories" above. Must match exact values.
+- price (Int): price of the listing
+- filename (String) : name of the file that will be listed on scry.info and downloaded
+- keyword (String): keywords related to the file that can be searched on scry. Must be separated by a space.
 
 ```
-[
  {
-   "categoryId": 51,
-   "cid": "QmVdfC5kG7nTf69yaHryPVEcLKhxZNHff49UHSL8YBbYYm",
-   "created_at": "Thu, 14 Jun 2018 16:27:00 GMT",
-   "id": 16,
-   "isstructured": true,
-   "keywords": "Aviation,Commercial Flight, Schedule",
-   "name": "Schedule.csv",
-   "owner": {
-     "account": "0xef97584f1a5f98a51d8f8b68dfb3c165045e508e",
-     "created_at": "Mon, 28 May 2018 16:55:49 GMT",
-     "id": 8,
-     "name": "22",
-     "password_hash": "pbkdf2:sha256:50000$bf801740b8f08e65$294a006c03083fc08b43bf0d08226d6a2ce91b8cbc5f784dcb7ecf9c756def3e"
-   },
-   "price": 5000,
-   "size": "179831"
+   "category_name":["Aviation", "Commercial", "Airline"],
+   "price":1000,
+   "filename":"Airlines.csv",
+   "keywords":"Commercial Airlines"
  }
-]
-
 ```
