@@ -16,6 +16,5 @@ services:
 #      - .:/home/python/publisher-backend
 
 networks:
-  default:
-    external:
-      name: scry_scry
+  scry_scry:
+    external: true

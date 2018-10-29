@@ -26,6 +26,22 @@ source venv/bin/activate
 
 ```
 
+When building the container, the source code is copied inside the container - the local repository is not attached. **This means that when you make changes and you want to try them in the container, you have to do docker-compose down; docker-compose up -d --build**. Another option is to attach the local directory that contains the repository into the container, by uncommenting following lines in docker-compose.yml:
+
+```
+#    volumes:
+#      - .:/home/python/publisher-backend
+
+```
+
+### to test on a different branch
+
+1. copy Dockerfile, docker-compose.yml and .dockerignore files somewhere on the side
+2. checkout the branch you want to test on (ie category_tree)
+3. copy the files back
+4. follow the steps above
+
+
 ## On your own system
 
 ### Pre-requisities
