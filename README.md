@@ -11,7 +11,9 @@ to run in docker, hostname must point to the docker container (called "postgres"
 db =  PostgresqlExtDatabase('scry', user='scry', password='scry',host='postgres', port=5432)
 
 ```
+
 [TODO: configuration should not be hardcoded, but loaded from .env]
+
 3. Build+start the environment using docker-compose. Important notes:
 - **docker-compose must always be run in the directory where the docker-compose.yml is located**
 - **If you have local instance of parity, postgresql or ipfs running, stop them before starting those containers**

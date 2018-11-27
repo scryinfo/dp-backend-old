@@ -7,7 +7,7 @@ services:
     ports:
       - 2222:2222
     networks:
-      - scry_scry
+      - scry_default
 #    environment:
 #      ENV=production
 #   depends_on:
@@ -16,5 +16,5 @@ services:
 #      - .:/home/python/publisher-backend
 
 networks:
-  scry_scry:
+  scry_default:
     external: true
