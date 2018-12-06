@@ -9,7 +9,8 @@ from playhouse.shortcuts import model_to_dict
 from flask import jsonify
 
 
-db =  PostgresqlExtDatabase('scry', user=DB_USER,port=5432)
+#db =  PostgresqlExtDatabase('scry', user=DB_USER,port=5432)
+db =  PostgresqlExtDatabase('scry', user='scry', password='scry',host='localhost', port=5432)
 
 class Categories(Model):
     name =  CharField(unique=True) # CANNOT CREATE UNIQUE ID
