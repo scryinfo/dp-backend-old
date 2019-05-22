@@ -1,8 +1,8 @@
 # Overview
-The Proof Of Concept for some of the ideas put forth in the Scry.Info whitepaper is implemented and contains following three projects: 
-- scry-server [scryInfo/scry](https://github.com/scryinfo/dp-contract-old) 
-- frontend [scryInfo/scry-frontend](https://github.com/scryinfo/dp-frontend-old)
-- publishing backend [scryInfo/publisher-backend](https://github.com/scryinfo/dp-backend-old)
+The Proof Of Concept for some of the ideas put forth in the Scry.Info whitepaper is implemented and contains following three projects:
+- scry-server [scryinfo/dp-contracts-old](https://github.com/scryinfo/dp-contracts-old)
+- frontend [scryinfo/dp-frontend-old](https://github.com/scryinfo/dp-frontend-old)
+- dp-backend [scryinfo/dp-backend-old](https://github.com/scryinfo/dp-backend-old)
 
 # INSTALLATION INSTRUCTIONS
 
@@ -29,7 +29,7 @@ docker-compose up -d
 -d means "detached" - the containers will continue to run in background and will not block your terminal
 4. to get bash shell in the running environment, and activate the python venv (to run commands like you would usually):
 ```
-docker-compose exec publisher-backend /bin/bash
+docker-compose exec dp-backend-old /bin/bash
 source venv/bin/activate
 
 ```
@@ -38,7 +38,7 @@ When building the container, the source code is copied inside the container - th
 
 ```
 #    volumes:
-#      - .:/home/python/publisher-backend
+#      - .:/home/python/dp-backend-old
 
 ```
 
@@ -54,7 +54,7 @@ When building the container, the source code is copied inside the container - th
 
 ### Pre-requisities
 
-Follow the repo https://github.com/scryInfo/scry/ to install full system.
+Follow the repo https://github.com/scryinfo/dp-contracts-old/ to install full system.
 
 Runs with python 3.6.
 
