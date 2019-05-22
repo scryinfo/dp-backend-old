@@ -1,8 +1,8 @@
 # Overview
 The Proof Of Concept for some of the ideas put forth in the Scry.Info whitepaper is implemented and contains following three projects: 
-- scry-server [scryInfo/scry](https://github.com/scryInfo/scry) 
-- frontend [scryInfo/scry-frontend](https://github.com/scryInfo/scry-frontend)
-- publishing backend [scryInfo/publisher-backend](https://github.com/scryInfo/publisher-backend)
+- scry-server [scryInfo/scry](https://github.com/scryinfo/dp-contract-old) 
+- frontend [scryInfo/scry-frontend](https://github.com/scryinfo/dp-frontend-old)
+- publishing backend [scryInfo/publisher-backend](https://github.com/scryinfo/dp-backend-old)
 
 # INSTALLATION INSTRUCTIONS
 
